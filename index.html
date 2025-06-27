@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IndiTube - Watch & Earn</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body {font-family: Arial, sans-serif; text-align: center; background: #fff8f0; margin:0; padding:20px;}
+    h1 {color: #d40000;}
+    .section {margin:20px 0;}
+    .video-card, .upload-card {background: #fff; border-radius:10px; box-shadow:0 0 10px #ccc; padding:15px; margin-top:20px;}
+    iframe, video {max-width:300px; border-radius:10px;}
+    .reward-tag {background:green;color:white;padding:5px 10px;border-radius:5px;margin-top:10px;display:inline-block;}
+    button {padding:10px 20px;background:#d40000;color:white;border:none;border-radius:5px;margin-top:10px;cursor:pointer;}
+    #wallet {margin-top:20px;font-size:20px;}
+    #connectorBtn {background-color:yellow;color:black;font-weight:bold;}
+    #connectorBtn.clicked {background-color:green;color:white;}
+    img.profile {width:80px;height:80px;object-fit:cover;border-radius:50%;margin-top:10px;}
+    input[type="file"], input[type="text"] {margin:5px;}
+  </style>
+</head>
+<body>
+  <h1>📻 IndiTube</h1>
+  <p>Watch videos to earn ₹5. Upload & create your channel to earn ₹10!</p>
+
+  <div id="wallet">
+    🪙 Coins: <span id="coins">0</span><br>
+    💸 Balance: ₹<span id="balance">0</span>
+  </div>
+
+  <div class="video-card section">
+    <iframe src="https://www.youtube.com/embed/fdkaVRn_bL4" frameborder="0" allowfullscreen></iframe>
+    <div class="reward-tag">Earn ₹5</div><br/>
+    <button onclick="earnReward(5)">✅ I watched it</button>
+  </div>
+
+  <div class="upload-card section">
+    <h3>🎨 Upload Video & Create Channel</h3>
+    <input type="file" accept="video/*" onchange="previewUpload(event)" /><br/>
+    <input type="text" placeholder="Your Channel Name" id="channelName" /><br/>
+    <input type="file" accept="image/*" onchange="setChannelImage(event)" /><br/>
+    <div id="previewArea"></div>
+  </div>
+
+  <div class="section">
+    <button id="connectorBtn" onclick="connectChannel()">🔔 Connector (<span id="connectCount">0</span>)</button>
+  </div>
+
+  <div class="section">
+    <button onclick="resetWallet()">🔄 Reset</button>
+    <button onclick="redeem()">💰 Redeem</button>
+  </div>
+
+  <audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_783be14e94.mp3" preload="auto"></audio>
+
+  <script>
+    let coins = localStorage.getItem("coins") || 0;
+    let balance = localStorage.getItem("balance") || 0;
+    let connectCount = localStorage.getItem("connectCount") || 0;
+    document.getElementById("coins").innerText = coins;
+    document.getElementById("balance").innerText = balance;
+    document.getElementById("connectCount").innerText = connectCount;
+
+    function earnReward(amount) {
+      coins = parseInt(coins)+1; balance = parseInt(balance)+amount;
+      localStorage.setItem("coins",coins);
+      localStorage.setItem("balance",balance);
+      document.getElementById("coins").innerText=coins;
+      document.getElementById("balance").innerText=balance;
+      alert(`🎉 You earned ₹${amount}!`);
+    }
+
+    function resetWallet() {
+      if(confirm("Reset everything?")) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+
+    function redeem() {
+      if(balance>=100) {
+        alert("🎉 Redeem request submitted! Contact admin with UPI.");
+        resetWallet();
+      } else alert("💡 You need ₹100 to redeem.");
+    }
+
+    function previewUpload(e) {
+      const file=e.target.files[0];
+      const channel=document.getElementById("channelName").value;
+      if(file&&channel) {
+        const videoURL=URL.createObjectURL(file);
+        const imageURL=localStorage.getItem("channelImg")||"";
+        document.getElementById("previewArea").innerHTML = `
+          <video controls src="${videoURL}"></video>
+          <div class="reward-tag">Earn ₹10</div><br/>
+          <img src="${imageURL}" class="profile" alt="Channel"/><br/>
+          <strong>${channel}</strong><br/>
+          <button onclick="earnReward(10)">✅ I uploaded</button>`;
+      } else alert("Enter channel name & select video.");
+    }
+
+    function setChannelImage(e) {
+      const f=e.target.files[0];
+      if(f) {
+        const reader=new FileReader();
+        reader.onload = function(ev) {
+          localStorage.setItem("channelImg",ev.target.result);
+        };
+        reader.readAsDataURL(f);
+      }
+    }
+
+    function connectChannel() {
+      const btn=document.getElementById("connectorBtn");
+      if(!btn.classList.contains("clicked")) {
+        btn.classList.add("clicked");
+        document.getElementById("clickSound").play();
+        connectCount= parseInt(connectCount)+1;
+        localStorage.setItem("connectCount",connectCount);
+        document.getElementById("connectCount").innerText=connectCount;
+      }
+    }
+  </script>
+</body>
+</html>
