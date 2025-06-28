@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>R2 Upload Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h2 { color: #333; }
+    #status { margin-top: 20px; font-weight: bold; color: red; }
+  </style>
+</head>
+<body>
+  <h2>📄 R2 Upload Test</h2>
+  <input type="file" id="fileInput" />
+  <button onclick="uploadFile()">Test Upload</button>
+  <div id="status">⏳ Waiting for upload...</div>
+
+  <script>
+    async function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      const status = document.getElementById("status");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        status.innerText = "❌ Please select a file first.";
+        return;
+      }
+
+      const r2BucketUrl = "https://YOUR_BUCKET_NAME.YOUR_ACCOUNT_ID.r2.cloudflarestorage.com/";
+      const uploadUrl = r2BucketUrl + encodeURIComponent(file.name);
+
+      status.innerText = "⬆️ Uploading...";
+
+      try {
+        const response = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type
+          },
+          body: file
+        });
+
+        if (response.ok) {
+          status.innerText = "✅ Upload successful!";
+        } else {
+          status.innerText = "❌ Upload failed: " + response.statusText;
+        }
+      } catch (error) {
+        status.innerText = "❌ Error: " + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
