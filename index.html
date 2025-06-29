@@ -47,7 +47,11 @@
       <input id="chName" placeholder="Channel Name"/><br/>
       <button id="uploadBtn">⬆ Upload via Cloudinary</button>
     </section>
-    <section id="profile"><h3>Your Profile</h3><div id="meInfo"></div><div id="profVideos"></div></section>
+    <section id="profile">
+      <h3>Your Profile</h3>
+      <div id="meInfo"></div>
+      <div id="profVideos"></div>
+    </section>
     <section id="withdraw">
       <h3>Withdraw</h3>
       <p><strong>Balance:</strong> ₹<span id="balAmt">0</span></p>
@@ -110,126 +114,97 @@
     }
 
     function go(id) {
-      [...document.querySelectorAll("section")].forEach(s => s.classList.remove("active"));
+      Array.from(document.querySelectorAll("section")).forEach(s => s.classList.remove("active"));
       document.getElementById(id).classList.add("active");
-      if (id == "withdraw") document.getElementById("balAmt").innerText = sessions[current].wallet;
+      if (id === "withdraw") document.getElementById("balAmt").innerText = sessions[current].wallet;
     }
 
     const widget = cloudinary.createUploadWidget({
-      cloudName, uploadPreset, sources: ["local", "url", "camera"],
+      cloudName, uploadPreset,
+      sources: ["local","url","camera"],
       resourceType: "video", folder: "inditube-videos", multiple: false
     }, (err, res) => {
       if (!err && res.event === "success") {
         const info = res.info;
         const v = {
-          id: Date.now(), title: info.original_filename, url: info.secure_url,
-          channel: sessions[current].channel, user: current,
-          likes: 0, dislikes: 0, views: 0, earned: false, connectors: []
+          id: Date.now(),
+          title: info.original_filename,
+          url: info.secure_url,
+          channel: sessions[current].channel,
+          user: current,
+          likes: 0,
+          dislikes: 0,
+          views: 0,
+          earned: false,
+          connected: false
         };
-        sessions[current].videos.push(v); saveAll(); renderAll(); go("home");
+        sessions[current].videos.push(v);
+        saveAll();
+        renderAll();
+        go("home");
       }
     });
 
     uploadBtn.onclick = () => {
-      let cn = chName.value.trim();
-      if (cn) sessions[current].channel = cn;
-      saveAll(); widget.open();
+      const cn = chName.value.trim();
+      if (cn) {
+        sessions[current].channel = cn;
+      }
+      saveAll();
+      widget.open();
     };
 
     function renderAll() {
-      updateWallet(); renderHome(); renderProfile();
+      updateWallet();
+      renderHome();
+      renderProfile();
     }
 
     function updateWallet() {
-      wallet.innerText = sessions[current].wallet;
+      document.getElementById("wallet").innerText = sessions[current].wallet;
     }
 
     function renderHome() {
       const all = Object.values(sessions).flatMap(s => s.videos);
-      home.innerHTML = "<h3>Home</h3>" + all.map(v => {
+      let html = "<h3>Home</h3>";
+      all.forEach(v => {
         const me = sessions[v.user];
-        const isConnected = v.connectors.includes(current);
-        return \`
+        html += `
           <div class="card">
-            <video id="vid\${v.id}" src="\${v.url}" controls></video>
+            <video id="vid${v.id}" src="${v.url}" controls></video>
             <div class="top-info">
-              <img src="\${me.chImg || ''}" onerror="this.style.display='none'"/>
-              <strong>\${v.channel}</strong>
-              <span class="views">\${v.views} views</span>
+              <img src="${me.chImg || ''}" onerror="this.style.display='none'"/>
+              <strong>${v.channel}</strong>
+              <span class="views">${v.views} views</span>
             </div>
             <div class="likes">
-              <button onclick="like(\${v.id},this)">👍\${v.likes}</button>
-              <button onclick="dislike(\${v.id},this)">👎\${v.dislikes}</button>
-              <button class="share-btn" onclick="shareVid('\${v.url}')">🔗Share</button>
-              <button class="connect-btn \${isConnected ? 'active' : ''}" onclick="connect(\${v.id},this)">
-                Connect (\${v.connectors.length})
-              </button>
-              <span class="timer" id="timer\${v.id}">Watch 30s to earn ₹5</span>
+              <button onclick="like(${v.id},this)">👍${v.likes}</button>
+              <button onclick="dislike(${v.id},this)">👎${v.dislikes}</button>
+              <button class="share-btn" onclick="shareVid('${v.url}')">🔗Share</button>
+              <button class="connect-btn ${v.connected?'active':''}" onclick="connect(${v.id},this)">Connect</button>
+              <span class="timer" id="timer${v.id}">Watch 30s to earn ₹5</span>
             </div>
-          </div>\`;
-      }).join('');
+          </div>`;
+      });
+      document.getElementById("home").innerHTML = html;
       all.forEach(setupTimer);
     }
 
     function renderProfile() {
       const me = sessions[current];
-      meInfo.innerHTML = \`
+      document.getElementById("meInfo").innerHTML = `
         <div class="top-info">
-          <img src="\${me.chImg || ''}" onerror="this.style.display='none'"/>
-          <strong>\${me.channel}</strong>
-        </div>\`;
-      profVideos.innerHTML = me.videos.map(v => \`
-        <div class="card"><video src="\${v.url}" controls></video>
-        <div>Likes: \${v.likes} | Dislikes: \${v.dislikes} | Views: \${v.views}</div></div>
-      \`).join('');
-    }
-
-    function like(id, btn) {
-      changeVid(id, v => v.likes++);
-      btn.innerText = "👍" + findVid(id).likes;
-    }
-
-    function dislike(id, btn) {
-      changeVid(id, v => v.dislikes++);
-      btn.innerText = "👎" + findVid(id).dislikes;
-    }
-
-    function connect(id, btn) {
-      changeVid(id, v => {
-        if (!v.connectors.includes(current)) v.connectors.push(current);
+          <img src="${me.chImg || ''}" onerror="this.style.display='none'"/>
+          <strong>${me.channel}</strong>
+        </div>`;
+      let html = "";
+      me.videos.forEach(v => {
+        html += `<div class="card">
+          <video src="${v.url}" controls></video>
+          <div>Likes: ${v.likes} | Dislikes: ${v.dislikes} | Views: ${v.views}</div>
+        </div>`;
       });
-      btn.classList.add("active");
-      btn.innerText = \`Connect (\${findVid(id).connectors.length})\`;
-    }
-
-    function shareVid(url) {
-      const msg = \`Watch this on IndiTubes:\n\${url}\`;
-      if (navigator.share) navigator.share({ text: msg });
-      else prompt("Copy link:", msg);
-    }
-
-    function setupTimer(v) {
-      const vid = document.getElementById(\`vid\${v.id}\`);
-      const timer = document.getElementById(\`timer\${v.id}\`);
-      vid.onplay = () => {
-        const earned = findVid(v.id).earned;
-        if (earned) { timer.innerText = "✅ Earned ₹5"; return; }
-        let iv = setInterval(() => {
-          const t = Math.floor(vid.currentTime);
-          timer.innerText = \`⏱ \${t}/30 sec\`;
-          if (t >= 30) {
-            clearInterval(iv);
-            changeVid(v.id, vi => {
-              if (!vi.earned) {
-                vi.earned = true; vi.views++;
-                sessions[vi.user].wallet += 5;
-              }
-            });
-            timer.innerText = "✅ Earned ₹5!";
-            updateWallet(); renderProfile();
-          }
-        }, 500);
-      };
+      document.getElementById("profVideos").innerHTML = html;
     }
 
     function findVid(id) {
@@ -246,22 +221,74 @@
       saveAll();
     }
 
+    function like(id, btn) {
+      changeVid(id, v => v.likes++);
+      btn.innerText = "👍" + findVid(id).likes;
+    }
+
+    function dislike(id, btn) {
+      changeVid(id, v => v.dislikes++);
+      btn.innerText = "👎" + findVid(id).dislikes;
+    }
+
+    function connect(id, btn) {
+      changeVid(id, v => {
+        if (!v.connected) v.connected = true;
+      });
+      btn.classList.add("active");
+      btn.innerText = "Connected";
+    }
+
+    function shareVid(url) {
+      const msg = `Watch this on IndiTubes:\n${url}`;
+      if (navigator.share) navigator.share({ text: msg });
+      else prompt("Copy link:", msg);
+    }
+
+    function setupTimer(v) {
+      const vid = document.getElementById(`vid${v.id}`);
+      const timer = document.getElementById(`timer${v.id}`);
+      vid.onplay = () => {
+        const earned = findVid(v.id).earned;
+        if (earned) {
+          timer.innerText = "✅ Earned ₹5";
+          return;
+        }
+        let iv = setInterval(() => {
+          const t = Math.floor(vid.currentTime);
+          timer.innerText = `⏱ ${t}/30 sec`;
+          if (t >= 30) {
+            clearInterval(iv);
+            changeVid(v.id, vi => {
+              if (!vi.earned) {
+                vi.earned = true;
+                vi.views++;
+                sessions[vi.user].wallet += 5;
+              }
+            });
+            timer.innerText = "✅ Earned ₹5!";
+            updateWallet();
+            renderProfile();
+          }
+        }, 500);
+      };
+    }
+
     function redeem() {
       const amt = parseInt(wAmount.value),
             n = wName.value.trim(),
             c = wContact.value.trim(),
             u = wUPI.value.trim();
       if (!amt || !n || !c || !u) return alert("Fill all fields");
-      if (amt > sessions[current].wallet) return alert("Insufficient");
-      sessions[current].wallet -= amt; saveAll(); updateWallet();
-      alert(\`Your payment is processed in 2‑3 hours.\`);
+      if (amt > sessions[current].wallet) return alert("Insufficient balance");
+      sessions[current].wallet -= amt;
+      saveAll();
+      updateWallet();
+      alert(`Your payment is processed in 2‑3 hours.`);
       go("withdraw");
     }
 
-    if (Object.keys(users).length) {
-      document.getElementById("app").style.display = "block";
-      renderAll();
-    }
+    if (Object.keys(users).length) { document.getElementById("app").style.display = "block"; renderAll(); }
   </script>
 </body>
 </html>
