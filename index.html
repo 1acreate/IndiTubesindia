@@ -1,157 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>IndiTube - Earn & Upload</title>
-  <link rel="icon" href="YOUR_LOGO.png">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IndiTubes</title>
   <style>
-    body { font-family: sans-serif; margin: 0; background: #fdfcf4; }
-    header { background: #dc2626; color: #fff; padding: 1rem; display: flex; align-items: center; justify-content: space-between; }
-    header img { height: 40px; }
-    .container { padding: 1rem; }
-    input, button, select { width: 100%; padding: 0.8rem; margin: 0.5rem 0; border-radius: 5px; border: 1px solid #ccc; }
-    button.primary { background: #dc2626; color: #fff; border: none; font-weight: bold; }
-    button.primary:disabled { background: #aaa; }
-    .card { background: #fff; padding: 1rem; margin: 1rem 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    video { width: 100%; border-radius: 8px; }
-    .timer { color: #16a34a; font-weight: bold; margin-top: 0.5rem; }
-    footer { text-align: center; padding: 1rem; color: #888; }
+    body { font-family: sans-serif; margin: 0; background: #fff8f0; }
+    header { background: #d40000; color: white; display: flex; justify-content: space-between; align-items: center; padding: 1rem; }
+    .wallet { font-weight: bold; }
+    .section { display: none; padding: 1rem; }
+    .section.active { display: block; }
+    nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #eee; }
+    nav button { flex: 1; padding: 1rem; border: none; font-weight: bold; background: #f9f9f9; cursor: pointer; }
+    .card { background: white; margin: 1rem 0; padding: 1rem; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    .reward-tag { background: green; color: white; padding: 5px 10px; border-radius: 5px; display: inline-block; margin-top: 10px; }
+    .comment { background: #f0f0f0; margin-top: 5px; padding: 5px; border-radius: 5px; }
+    input, select, textarea { width: 100%; padding: 10px; margin-top: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button.action { background: #d40000; color: white; border: none; padding: 10px; border-radius: 5px; margin-top: 10px; cursor: pointer; }
+    .likes { margin-top: 10px; }
+    video { width: 100%; border-radius: 10px; }
+    .timer { font-weight: bold; color: green; margin-top: 5px; }
+    .top-info { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .top-info img { border-radius: 50%; width: 40px; height: 40px; }
+    .connector { background: yellow; border: none; padding: 5px 10px; border-radius: 5px; margin-left: auto; }
   </style>
 </head>
 <body>
-  <header>
-    <img src="YOUR_LOGO.png" alt="IndiTube Logo"/>
-    <h1>IndiTube</h1>
-    <span>₹<span id="walletHeader">0</span></span>
-  </header>
 
-  <div id="loginSection" class="container">
-    <h2>Login or Sign Up</h2>
-    <input id="email" type="email" placeholder="Email" required/>
-    <input id="password" type="password" placeholder="Password" required/>
-    <button id="loginBtn" class="primary" onclick="login()">Login / Sign Up</button>
-  </div>
+<header>
+  <div>🎥 IndiTubes</div>
+  <div class="wallet">Wallet: ₹<span id="wallet">0</span></div>
+</header>
 
-  <div id="appSection" class="container" style="display:none;">
-    <button onclick="logout()">🔓 Logout</button>
+<div id="loginBox" style="padding: 2rem; text-align: center;">
+  <h2>Login</h2>
+  <input id="user" type="text" placeholder="Username" />
+  <input id="pass" type="password" placeholder="Password" />
+  <button class="action" onclick="login()">Login</button>
+</div>
 
-    <h2>Upload Video</h2>
-    <input id="videoTitle" type="text" placeholder="Video Title" required/>
-    <input id="videoFile" type="file" accept="video/*" required/>
-    <button id="uploadBtn" class="primary" onclick="uploadVideo()">Upload</button>
+<div id="app" style="display:none;">
+  <section id="upload" class="section active">
+    <h3>Upload Video</h3>
+    <input id="title" type="text" placeholder="Video Title" />
+    <input id="channel" type="text" placeholder="Your Channel Name" />
+    <input id="channelImg" type="file" accept="image/*" />
+    <input id="videoFile" type="file" accept="video/*" />
+    <button class="action" onclick="upload()">Upload</button>
+  </section>
 
-    <h2>Watch & Earn (₹5 after 30s)</h2>
+  <section id="videos" class="section">
+    <h3>Watch & Earn</h3>
     <div id="videoList"></div>
+  </section>
 
-    <h2>Wallet & Withdraw</h2>
-    <p>Your Balance: ₹<span id="wallet">0</span></p>
-    <input id="withdrawName" type="text" placeholder="Your Name" required/>
-    <input id="withdrawUPI" type="text" placeholder="Paytm/UPI ID" required/>
-    <button id="withdrawBtn" class="primary" onclick="submitWithdraw()">Withdraw</button>
-  </div>
+  <section id="walletSection" class="section">
+    <h3>Withdraw</h3>
+    <p>Balance: ₹<span id="balance">0</span></p>
+    <input id="name" placeholder="Your Name" />
+    <select id="method">
+      <option value="">Select Method</option>
+      <option>Paytm</option>
+      <option>Google Pay</option>
+      <option>PhonePe</option>
+      <option>UPI</option>
+    </select>
+    <input id="upi" placeholder="UPI ID or Number" />
+    <button class="action" onclick="redeem()">Withdraw</button>
+  </section>
 
-  <footer>© 2025 IndiTube — Build Your Future</footer>
+  <nav>
+    <button onclick="go('upload')">⬆ Upload</button>
+    <button onclick="go('videos')">📺 Videos</button>
+    <button onclick="go('walletSection')">💰 Wallet</button>
+  </nav>
+</div>
 
-  <script>
-    const supabase = supabase.createClient(
-      'https://adeeyjsudmaqktkrpjrh.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5c...'
-    );
-    let wallet = 0;
+<script>
+  let wallet = parseInt(localStorage.getItem('wallet') || 0);
+  let videos = JSON.parse(localStorage.getItem('videos') || '[]');
 
-    async function login() {
-      loginBtn.disabled = true;
-      const emailVal = email.value.trim(), passVal = password.value.trim();
-      if(!emailVal || !passVal) { alert('Enter email & password'); return logoutDisable(); }
-      let { user, error } = await supabase.auth.signIn({ email: emailVal, password: passVal });
-      if(error && error.message.includes('Invalid login')) {
-        ({ user, error } = await supabase.auth.signUp({ email: emailVal, password: passVal }));
-      }
-      if(error) { alert(error.message); return logoutDisable(); }
-      showApp();
-    }
-
-    function logoutDisable() {
-      loginBtn.disabled = false;
-    }
-
-    async function showApp() {
-      loginSection.style.display = 'none';
-      appSection.style.display = 'block';
-      await refreshWallet();
-      loadVideos();
-    }
-
-    async function logout() {
-      await supabase.auth.signOut();
-      location.reload();
-    }
-
-    async function uploadVideo() {
-      const t = videoTitle.value.trim(), f = videoFile.files[0];
-      if(!t || !f) return alert('Fill title + file');
-      uploadBtn.disabled = true;
-      const path = `${supabase.auth.user().id}_${Date.now()}_${f.name}`;
-      const { error: upErr } = await supabase.storage.from('videos').upload(path, f);
-      if(upErr) return alert(upErr.message);
-      const { publicURL } = supabase.storage.from('videos').getPublicUrl(path);
-      const { error: dbErr } = await supabase.from('videos')
-        .insert([{ user_id: supabase.auth.user().id, title: t, url: publicURL }]);
-      if(dbErr) return alert(dbErr.message);
-      videoTitle.value = ''; videoFile.value = '';
-      loadVideos();
-      uploadBtn.disabled = false;
-    }
-
-    async function loadVideos() {
-      videoList.innerHTML = '';
-      let { data: vids, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false });
-      if(error) alert(error.message);
-      vids.forEach(v => createCard(v));
-    }
-
-    function createCard(v) {
-      const div = document.createElement('div'); div.className = 'card';
-      const vid = document.createElement('video'); vid.src = v.url; vid.controls = true;
-      const timer = document.createElement('div'); timer.className = 'timer'; timer.innerText = '⏱ 0s watched';
-      div.append(vid, timer);
-      let watched = 0, earned = false;
-      vid.addEventListener('timeupdate', async () => {
-        if(watched < 30 && vid.currentTime >= watched + 1) {
-          watched = Math.floor(vid.currentTime);
-          timer.innerText = `⏱ ${watched}s watched`;
-        }
-        if(!earned && watched >= 30) {
-          earned = true;
-          timer.innerText = '✅ Earned ₹5';
-          await supabase.from('views').insert([{ user_id: supabase.auth.user().id, video_id: v.id }]);
-          await refreshWallet();
-        }
-      });
-      videoList.append(div);
-    }
-
-    async function refreshWallet() {
-      const uid = supabase.auth.user().id;
-      const { count } = await supabase.from('views').select('*', { head: true, count: 'exact' }).eq('user_id', uid);
-      wallet = count * 5;
+  function login() {
+    if (user.value && pass.value) {
+      loginBox.style.display = 'none';
+      app.style.display = 'block';
       document.getElementById('wallet').innerText = wallet;
-      document.getElementById('walletHeader').innerText = wallet;
+      document.getElementById('balance').innerText = wallet;
+      render();
     }
+  }
 
-    async function submitWithdraw() {
-      if(wallet < 100) return alert('Minimum ₹100 needed');
-      const names = withdrawName.value.trim(), upi = withdrawUPI.value.trim();
-      if(!names || !upi) return alert('Fill name & UPI');
-      withdrawBtn.disabled = true;
-      await supabase.from('withdraws').insert([{ user_id: supabase.auth.user().id, amount: wallet, name: names, upi }]);
-      alert('Withdraw request submitted');
-      wallet = 0;
-      refreshWallet();
-      withdrawBtn.disabled = false;
-    }
-  </script>
+  function go(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('wallet').innerText = wallet;
+    document.getElementById('balance').innerText = wallet;
+  }
+
+  function upload() {
+    if (!title.value || !channel.value || !channelImg.files[0] || !videoFile.files[0]) return alert('All fields required');
+    const vReader = new FileReader();
+    const iReader = new FileReader();
+    vReader.onload = e => {
+      iReader.onload = i => {
+        videos.push({title: title.value, channel: channel.value, url: e.target.result, img: i.target.result, earned: false, likes: 0, dislikes: 0, comments: [], connectors: 0});
+        localStorage.setItem('videos', JSON.stringify(videos));
+        render(); go('videos');
+      };
+      iReader.readAsDataURL(channelImg.files[0]);
+    };
+    vReader.readAsDataURL(videoFile.files[0]);
+  }
+
+  function render() {
+    videoList.innerHTML = '';
+    videos.forEach((v, i) => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML = `
+        <video id="vid${i}" src="${v.url}" controls></video>
+        <div class="timer" id="timer${i}">⏱ Not started</div>
+        <div class="reward-tag">Earn ₹5</div>
+        <h4>${v.title}</h4>
+        <div class="top-info">
+          <img src="${v.img}" />
+          <strong>${v.channel}</strong>
+          <button class="connector" onclick="connect(${i}, this)">Connector (${v.connectors})</button>
+        </div>
+        <div class="likes">
+          <button onclick="like(${i})">👍 (${v.likes})</button>
+          <button onclick="dislike(${i})">👎 (${v.dislikes})</button>
+          <button onclick="share()">🔗 Share</button>
+        </div>
+        <textarea id="comment${i}" placeholder="Leave a comment..."></textarea>
+        <button onclick="addComment(${i})">Comment</button>
+        <div id="comments${i}">${v.comments.map(c=>`<div class='comment'>${c}</div>`).join('')}</div>
+      `;
+      videoList.appendChild(div);
+      setupTimer(i);
+    });
+  }
+
+  function setupTimer(i) {
+    const vid = document.getElementById(`vid${i}`);
+    const timer = document.getElementById(`timer${i}`);
+    let earned = videos[i].earned;
+    let intv;
+    vid.addEventListener('play', () => {
+      if (earned) { timer.innerText = '✅ Already Earned'; return; }
+      clearInterval(intv);
+      intv = setInterval(() => {
+        const t = Math.floor(vid.currentTime);
+        if (t >= 30) {
+          clearInterval(intv);
+          wallet += 5;
+          videos[i].earned = true;
+          update();
+          timer.innerText = '✅ Earned ₹5!';
+        } else {
+          timer.innerText = `⏱ Watching: ${t}/30 sec`;
+        }
+      }, 1000);
+    });
+  }
+
+  function update() {
+    localStorage.setItem('videos', JSON.stringify(videos));
+    localStorage.setItem('wallet', wallet);
+    document.getElementById('wallet').innerText = wallet;
+    document.getElementById('balance').innerText = wallet;
+    render();
+  }
+
+  function like(i) { videos[i].likes++; update(); }
+  function dislike(i) { videos[i].dislikes++; update(); }
+  function connect(i, btn) { videos[i].connectors++; btn.disabled = true; update(); }
+  function addComment(i) {
+    const c = document.getElementById(`comment${i}`).value;
+    if (!c) return;
+    videos[i].comments.push(c);
+    update();
+  }
+  function share() {
+    if (navigator.share) navigator.share({ title: 'Watch this on IndiTubes', url: location.href });
+    else alert('Sharing not supported');
+  }
+
+  function redeem() {
+    if (wallet < 100) return alert('Minimum ₹100 needed');
+    if (!name.value || !method.value || !upi.value) return alert('Fill all fields');
+    alert(`Withdraw request sent for ₹${wallet} via ${method.value} to ${upi.value}`);
+    wallet = 0; update();
+  }
+</script>
 </body>
 </html>
