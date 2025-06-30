@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IndiTube</title>
   <style>
     body { font-family: Arial, sans-serif; background-color: #f2f2f2; margin: 0; }
@@ -27,12 +27,14 @@
 </head>
 <body>
   <header>IndiTube</header>
-  <nav>
+  <nav id="main-nav" class="hidden">
     <a onclick="showPage('gallery')">Gallery</a>
     <a onclick="showPage('upload')">Upload</a>
     <a onclick="showPage('dashboard')">Dashboard</a>
     <a onclick="showPage('withdraw')">Withdraw</a>
+    <a onclick="logout()">Logout</a>
   </nav>
+
   <div class="container">
     <div id="login">
       <h2>Login</h2>
@@ -71,7 +73,6 @@
   <script>
     const CLOUD_NAME = "dtlbk3ncz";
     const UPLOAD_PRESET = "Inditube";
-    const AD_URL = "https://collection.cloudinary.com/dtlbk3ncz/5e714e8807431a012e8a93dca68c4709";
     const uploadedVideos = [];
     const connectedChannels = {};
 
@@ -84,15 +85,21 @@
     }
 
     function loginUser() {
-      const name = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
+      const name = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
       if (name && pass) {
         localStorage.setItem("loggedIn", name);
         document.getElementById("login").classList.add("hidden");
+        document.getElementById("main-nav").classList.remove("hidden");
         showPage("gallery");
       } else {
         alert("Please enter valid credentials");
       }
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      location.reload();
     }
 
     function openWidget() {
@@ -153,16 +160,20 @@
       card.className = "video-card";
       const timerId = `timer-${index}`;
       const connectorId = `connect-${index}`;
-      const mainVideoId = `main-video-${index}`;
-      const adVideoId = `ad-video-${index}`;
       card.innerHTML = `
         <div class="channel-info">
           <img src="${v.channelImageUrl}" class="channel-img" alt="Channel Image" />
           <b>${v.channelName}</b>
         </div>
         <h4>${v.videoTitle}</h4>
-        <video id="${adVideoId}" src="${AD_URL}" controls autoplay muted width="100%" onended="playMain('${mainVideoId}', '${timerId}')"></video>
-        <video id="${mainVideoId}" src="${v.videoUrl}" controls class="hidden" width="100%" onplay="startEarning('${timerId}')"></video>
+        <iframe
+          src="https://player.cloudinary.com/embed/?cloud_name=dtlbk3ncz&public_id=xhcpjdgvyyulacph6vn0&profile=cld-default"
+          width="100%" height="200"
+          style="aspect-ratio: 16/9; margin-bottom:10px;"
+          allow="autoplay; fullscreen; encrypted-media"
+          allowfullscreen frameborder="0">
+        </iframe>
+        <video src="${v.videoUrl}" controls width="100%" onplay="startEarning('${timerId}')"></video>
         <div class="earn-timer" id="${timerId}">Earnings: ₹0</div>
         <div class="video-controls">
           <button style="background:#2196f3;color:white;" onclick="likeVideo(this)">👍 Like (<span>0</span>)</button>
@@ -176,11 +187,6 @@
         </div>
       `;
       return card;
-    }
-
-    function playMain(mainId, timerId) {
-      document.getElementById(mainId).classList.remove('hidden');
-      document.getElementById(mainId).play();
     }
 
     function likeVideo(btn) {
@@ -233,6 +239,7 @@
       const loggedIn = localStorage.getItem("loggedIn");
       if (loggedIn) {
         document.getElementById("login").classList.add("hidden");
+        document.getElementById("main-nav").classList.remove("hidden");
         showPage("gallery");
       }
     };
