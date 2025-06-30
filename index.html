@@ -1,261 +1,226 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IndiTubes PWA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IndiTube</title>
   <style>
-    body{margin:0;font-family:sans-serif;background:#f7f8fa;color:#333;}
-    header{background:#e53935;color:#fff;padding:1rem;display:flex;justify-content:space-between;align-items:center;}
-    .wallet{font-weight:bold;}
-    #loginBox, section{padding:1rem;display:none;}
-    #loginBox.active, section.active{display:block;}
-    input,button,select{margin:0.5rem 0;padding:0.7rem;border-radius:5px;border:1px solid #ccc;width:100%;box-sizing:border-box;}
-    button{cursor:pointer;}
-    nav{position:fixed;bottom:0;width:100%;display:flex;border-top:1px solid #ccc;background:#fff;}
-    nav button{flex:1;padding:0.8rem;border:none;background:#fafafa;font-size:0.9rem;}
-    .card{background:#fff;margin:1rem 0;padding:1rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
-    video{width:100%;border-radius:8px;}
-    .top-info{display:flex;align-items:center;gap:10px;margin:0.5rem 0;}
-    .top-info img{width:35px;height:35px;border-radius:50%;object-fit:cover;}
-    .likes button, .share-btn, .connect-btn{background:#e0e0e0;border:none;border-radius:5px;margin-right:5px;padding:3px 8px;font-size:0.8rem;cursor:pointer;}
-    .share-btn{background:#42a5f5;color:#fff;}
-    .connect-btn{background:yellow;}
-    .connect-btn.active{background:green;color:#fff;}
-    .timer{margin-top:5px;font-size:0.9rem;color:#e68a00;}
-    .views{font-size:0.8rem;color:#666;margin-left:auto;}
-    #searchBar{width:100%;padding:0.5rem;margin-bottom:1rem;border-radius:5px;border:1px solid #ccc;}
+    body { font-family: Arial, sans-serif; background-color: #f2f2f2; margin: 0; }
+    nav { background-color: #2c3e50; display: flex; justify-content: space-around; padding: 10px; }
+    nav a { color: white; text-decoration: none; font-weight: bold; cursor: pointer; }
+    header { background: #e91e63; color: white; padding: 10px; font-size: 24px; text-align: center; font-weight: bold; }
+    .container { padding: 20px; }
+    .hidden { display: none; }
+    .video-card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .video-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .video-controls button { padding: 6px 12px; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .video-controls button:hover { opacity: 0.9; }
+    .talkies { margin-top: 10px; }
+    .talkies input { width: 70%; padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    .talkies button { padding: 6px 10px; border-radius: 5px; border: none; background: #2196f3; color: white; }
+    .channel-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; }
+    .channel-info { display: flex; align-items: center; margin-top: 10px; }
+    .earn-timer { font-size: 14px; color: green; margin-top: 5px; }
+    .connect-btn { background: #ffeb3b; color: black; font-weight: bold; border: none; border-radius: 50px; padding: 6px 12px; }
+    .connect-btn.connected { background: #4caf50; color: white; }
   </style>
 </head>
 <body>
-  <header>
-    <div>🎥 IndiTubes</div>
-    <div class="wallet">Wallet: ₹<span id="wallet">0</span></div>
-  </header>
-  <div id="loginBox" class="active">
-    <h3>Login / Signup</h3>
-    <input id="uName" placeholder="Username"/>
-    <input id="uPass" type="password" placeholder="Password"/>
-    <input id="chImgFile" type="file" accept="image/*"/>
-    <button onclick="doLogin()">Go</button>
-  </div>
-  <div id="app">
-    <section id="home" class="active">
-      <input id="searchBar" placeholder="Search videos..."/>
-      <div id="videoContainer"></div>
-    </section>
-    <section id="upload">
-      <h3>Upload Video</h3>
-      <input id="chName" placeholder="Channel Name"/>
-      <button id="uploadBtn">⬆ Upload via Cloudinary</button>
-    </section>
-    <section id="profile">
-      <h3>Your Profile</h3>
-      <div id="meInfo"></div>
-      <div id="profVideos"></div>
-    </section>
-    <section id="withdraw">
-      <h3>Withdraw</h3>
-      <p><strong>Balance:</strong> ₹<span id="balAmt">0</span></p>
-      <input id="wName" placeholder="Name"/>
-      <input id="wContact" placeholder="Email/Phone"/>
-      <input id="wUPI" placeholder="UPI ID"/>
-      <input id="wAmount" placeholder="Amount"/>
-      <button onclick="redeem()">Withdraw</button>
-    </section>
-    <nav>
-      <button onclick="go('home')">🏠 Home</button>
-      <button onclick="go('upload')">⬆ Upload</button>
-      <button onclick="go('profile')">👤 Profile</button>
-      <button onclick="go('withdraw')">💸 Withdraw</button>
-      <button onclick="logout()">🚪 Logout</button>
-    </nav>
-  </div>
+  <header>IndiTube</header>
+  <nav>
+    <a onclick="showPage('gallery')">Gallery</a>
+    <a onclick="showPage('upload')">Upload</a>
+    <a onclick="showPage('dashboard')">Dashboard</a>
+    <a onclick="showPage('withdraw')">Withdraw</a>
+  </nav>
+  <div class="container">
+    <div id="login">
+      <h2>Login</h2>
+      <input type="text" id="username" placeholder="Name" /><br /><br />
+      <input type="password" id="password" placeholder="Password" /><br /><br />
+      <button onclick="loginUser()">Login</button>
+    </div><div id="gallery" class="hidden">
+  <h2>Public Gallery</h2>
+  <div id="video-list"></div>
+</div>
 
-  <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
-  <script>
-    const cloudName="dtlbk3ncz", uploadPreset="Inditube";
-    let users={}, sessions={}, current=null;
-    try {
-      users=JSON.parse(localStorage.users||"{}");
-      sessions=JSON.parse(localStorage.sessions||"{}");
-    } catch {}
+<div id="upload" class="hidden">
+  <h2>Upload Video</h2>
+  <input type="text" id="channelName" placeholder="Channel Name" /><br /><br />
+  <input type="file" id="channelImage" /><br /><br />
+  <input type="text" id="videoTitleInput" placeholder="Video Title" /><br /><br />
+  <button onclick="openWidget()">Upload Video</button>
+</div>
 
-    function saveAll() {
-      localStorage.users=JSON.stringify(users);
-      localStorage.sessions=JSON.stringify(sessions);
-    }
+<div id="dashboard" class="hidden">
+  <h2>Your Dashboard</h2>
+  <div id="dashboard-list"></div>
+</div>
 
-    function doLogin() {
-      const u=uName.value.trim(), p=uPass.value.trim(), f=chImgFile.files[0];
-      if(!u||!p) return alert("Username & pass required");
-      if(f) {
-        let r=new FileReader();
-        r.onload=() => completeLogin(u,p,r.result);
-        r.readAsDataURL(f);
-      } else completeLogin(u,p,null);
-    }
+<div id="withdraw" class="hidden">
+  <h2>Withdraw Earnings</h2>
+  <input type="text" placeholder="Your Name" /><br /><br />
+  <input type="text" placeholder="UPI ID" /><br /><br />
+  <button onclick="alert('Your payment will be sent to your account in a few hours.')">Submit</button>
+</div>
 
-    function completeLogin(u,p,img) {
-      if(!users[u]) users[u]=p;
-      else if(users[u]!==p) return alert("Incorrect password");
-      current=u;
-      if(!sessions[u]) sessions[u]={channel:u,chImg:img,videos:[],wallet:0};
-      else if(img) sessions[u].chImg=img;
-      loginBox.classList.remove("active");
-      document.getElementById("app").style.display="block";
-      saveAll(); renderAll();
-    }
+  </div>  <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>  <script>
+    const CLOUD_NAME = "dtlbk3ncz";
+    const UPLOAD_PRESET = "Inditube";
+    const uploadedVideos = [];
+    const connectedChannels = {};
 
-    function logout() {
-      current=null;
-      location.reload();
-    }
-
-    function go(id){
-      ["home","upload","profile","withdraw"].forEach(s=>document.getElementById(s).classList.remove("active"));
-      document.getElementById(id).classList.add("active");
-      if(id==="withdraw") balAmt.innerText=sessions[current].wallet;
-    }
-
-    const widget=cloudinary.createUploadWidget({
-      cloudName, uploadPreset, sources:["local","url","camera"],
-      resourceType:"video",folder:"inditube-videos"
-    },(err,res)=>{
-      if(!err&&res.event==="success"){
-        const info=res.info;
-        const v={id:Date.now(),title:info.original_filename,url:info.secure_url,
-                 channel:sessions[current].channel,user:current,
-                 likes:0,dislikes:0,views:0,earned:false,connected:false};
-        sessions[current].videos.push(v);
-        saveAll(); renderAll(); go("home");
-      }
-    });
-
-    uploadBtn.onclick = ()=> {
-      const root=sessions[current];
-      const cn=chName.value.trim(); if(cn) root.channel=cn;
-      widget.open();
-    };
-
-    function renderAll(){
-      updateWallet();
-      renderHome();
-      renderProfile();
-    }
-
-    function updateWallet(){
-      wallet.innerText=sessions[current].wallet;
-    }
-
-    function renderHome(){
-      const all=Object.values(sessions).flatMap(s=>s.videos);
-      const filter=searchBar.value.trim().toLowerCase();
-      const arr=all.filter(v=>v.title.toLowerCase().includes(filter)||v.channel.toLowerCase().includes(filter));
-      videoContainer.innerHTML = arr.map(v=>{
-        const me=sessions[v.user];
-        return `
-          <div class="card">
-            <strong>${v.title}</strong>
-            <video id="vid${v.id}" src="${v.url}" controls></video>
-            <div class="top-info">
-              <img src="${me.chImg||''}" onerror="this.style.display='none'"/>
-              <strong>${v.channel}</strong><span class="views">${v.views} views</span>
-            </div>
-            <div>
-              <button onclick="like(${v.id},this)">👍${v.likes}</button>
-              <button onclick="dislike(${v.id},this)">👎${v.dislikes}</button>
-              <button class="share-btn" onclick="shareVid('${v.url}')">Share</button>
-              <button class="connect-btn ${v.connected?'active':''}" onclick="connect(${v.id},this)">Connect</button>
-              <span class="timer" id="timer${v.id}">Watch 30s to earn ₹5</span>
-            </div>
-          </div>`;
-      }).join('');
-      arr.forEach(setupTimer);
-    }
-
-    searchBar.oninput = renderHome;
-
-    function renderProfile(){
-      const me=sessions[current];
-      meInfo.innerHTML=`
-        <div class="top-info">
-          <img src="${me.chImg||''}" onerror="this.style.display='none'"/>
-          <strong>${me.channel}</strong>
-        </div>`;
-      profVideos.innerHTML = me.videos.map(v=>`
-        <div class="card">
-          <strong>${v.title}</strong>
-          <video src="${v.url}" controls></video>
-          <div>👍${v.likes} 👎${v.dislikes} 🔁 ${v.views} views</div>
-        </div>`).join('');
-    }
-
-    function findVid(id){
-      return Object.values(sessions).flatMap(s=>s.videos).find(v=>v.id===id);
-    }
-
-    function changeVid(id,fn){
-      Object.values(sessions).forEach(u=>{
-        u.videos = u.videos.map(v=>{if(v.id===id)fn(v);return v});
+    function showPage(page) {
+      ['gallery', 'upload', 'dashboard', 'withdraw'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
       });
-      saveAll(); renderAll();
+      document.getElementById(page).classList.remove('hidden');
+      if (page === 'dashboard') renderDashboard();
     }
 
-    function like(id,btn){ changeVid(id,v=>v.likes++); btn.innerText="👍"+findVid(id).likes; }
-    function dislike(id,btn){ changeVid(id,v=>v.dislikes++); btn.innerText="👎"+findVid(id).dislikes; }
-    function connect(id,btn){
-      const vid=findVid(id);
-      if(!vid.connected){
-        changeVid(id,v=>v.connected=true);
-        btn.classList.add("active");
-        btn.innerText="Connected";
+    function loginUser() {
+      const name = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (name && pass) {
+        localStorage.setItem("loggedIn", name);
+        document.getElementById("login").classList.add("hidden");
+        showPage("gallery");
+      } else {
+        alert("Please enter valid credentials");
       }
     }
 
-    function shareVid(url){
-      if(navigator.share) navigator.share({url});
-      else prompt("Copy link",url);
-    }
+    function openWidget() {
+      const channelName = document.getElementById("channelName").value;
+      const videoTitle = document.getElementById("videoTitleInput").value;
+      const channelImage = document.getElementById("channelImage").files[0];
 
-    function setupTimer(v){
-      const vidEl=document.getElementById(`vid${v.id}`);
-      const tEl=document.getElementById(`timer${v.id}`);
-      vidEl.onplay = () => {
-        const vid = findVid(v.id);
-        if(vid.earned){ tEl.innerText="✅ Earned ₹5"; return; }
-        const iv = setInterval(()=>{
-          const t= Math.floor(vidEl.currentTime);
-          tEl.innerText=`⏱ ${t}/30 sec`;
-          if(t>=30){
-            clearInterval(iv);
-            changeVid(v.id,vi=> {
-              if(!vi.earned){
-                vi.earned=true;
-                vi.views++;
-                sessions[vi.user].wallet+=5;
-              }
-            });
-            tEl.innerText="✅ Earned ₹5!";
+      if (!channelName || !channelImage || !videoTitle) {
+        alert("Please provide channel name, video title and image");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const imageUrl = reader.result;
+
+        cloudinary.openUploadWidget({
+          cloudName: CLOUD_NAME,
+          uploadPreset: UPLOAD_PRESET,
+          sources: ["local"],
+          multiple: false,
+          resourceType: "video"
+        }, (error, result) => {
+          if (!error && result && result.event === "success") {
+            const videoUrl = result.info.secure_url;
+            const uploader = localStorage.getItem("loggedIn") || "Guest";
+            const videoObj = { videoUrl, videoTitle, channelName, channelImageUrl: imageUrl, uploader };
+            uploadedVideos.push(videoObj);
+            renderGallery();
+            renderDashboard();
+            alert("Video uploaded successfully!");
           }
-        },500);
+        });
       };
+      reader.readAsDataURL(channelImage);
     }
 
-    function redeem(){
-      const amt=parseInt(wAmount.value),n=wName.value.trim(),c=wContact.value.trim(),u=wUPI.value.trim();
-      if(!amt||!n||!c||!u)return alert("Complete fields");
-      const bal=sessions[current].wallet;
-      if(amt>bal) return alert("Insufficient");
-      sessions[current].wallet-=amt; saveAll(); updateWallet();
-      alert("Your payment is processed in 2‑3 hours.");
-      go("withdraw");
+    function renderGallery() {
+      const list = document.getElementById("video-list");
+      list.innerHTML = '';
+      uploadedVideos.forEach((v, index) => {
+        list.appendChild(createVideoCard(v, index));
+      });
     }
 
-    if(localStorage.users){
-      loginBox.classList.remove("active");
-      document.getElementById("app").style.display="block";
+    function renderDashboard() {
+      const list = document.getElementById("dashboard-list");
+      list.innerHTML = '';
+      uploadedVideos.forEach((v, index) => {
+        if (v.uploader === localStorage.getItem("loggedIn")) {
+          list.appendChild(createVideoCard(v, index));
+        }
+      });
     }
-  </script>
-</body>
+
+    function createVideoCard(v, index) {
+      const card = document.createElement("div");
+      card.className = "video-card";
+      const timerId = `timer-${index}`;
+      const connectorId = `connect-${index}`;
+      card.innerHTML = `
+        <div class="channel-info">
+          <img src="${v.channelImageUrl}" class="channel-img" alt="Channel Image" />
+          <b>${v.channelName}</b>
+        </div>
+        <h4>${v.videoTitle}</h4>
+        <video src="${v.videoUrl}" controls width="100%" onplay="startEarning('${timerId}')"></video>
+        <div class="earn-timer" id="${timerId}">Earnings: ₹0</div>
+        <div class="video-controls">
+          <button style="background:#2196f3;color:white;" onclick="likeVideo(this)">👍 Like (<span>0</span>)</button>
+          <button style="background:#f44336;color:white;" onclick="dislikeVideo(this)">👎 Dislike (<span>0</span>)</button>
+          <button style="background:#9c27b0;color:white;" onclick="shareVideo('${v.videoUrl}')">🔗 Share</button>
+          <button class="connect-btn" id="${connectorId}" onclick="connectChannel('${connectorId}')">⚡ Connect (0)</button>
+        </div>
+        <div class="talkies">
+          <input type="text" placeholder="Talkies (Comment here)" />
+          <button onclick="postComment(this)">Post</button>
+        </div>
+      `;
+      return card;
+    }
+
+    function likeVideo(btn) {
+      let span = btn.querySelector("span");
+      span.innerText = parseInt(span.innerText) + 1;
+    }
+
+    function dislikeVideo(btn) {
+      let span = btn.querySelector("span");
+      span.innerText = parseInt(span.innerText) + 1;
+    }
+
+    function shareVideo(url) {
+      navigator.clipboard.writeText(url);
+      alert("Video link copied!");
+    }
+
+    function connectChannel(id) {
+      if (!connectedChannels[id]) connectedChannels[id] = 0;
+      connectedChannels[id]++;
+      const btn = document.getElementById(id);
+      btn.innerText = `✅ Connected (${connectedChannels[id]})`;
+      btn.classList.add("connected");
+      btn.disabled = true;
+      const audio = new Audio("https://www.soundjay.com/button/beep-07.wav");
+      audio.play();
+    }
+
+    function postComment(btn) {
+      const input = btn.previousElementSibling;
+      if (input.value.trim()) {
+        alert("Comment: " + input.value);
+        input.value = "";
+      }
+    }
+
+    function startEarning(timerId) {
+      const div = document.getElementById(timerId);
+      if (!div.dataset.started) {
+        div.dataset.started = true;
+        let earning = 0;
+        setInterval(() => {
+          earning += 5;
+          div.innerText = `Earnings: ₹${earning}`;
+        }, 30000);
+      }
+    }
+
+    window.onload = () => {
+      const loggedIn = localStorage.getItem("loggedIn");
+      if (loggedIn) {
+        document.getElementById("login").classList.add("hidden");
+        showPage("gallery");
+      }
+    };
+  </script></body>
 </html>
