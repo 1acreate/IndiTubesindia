@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IndiTubes</title>
+  <title>IndiTubes PWA</title>
   <style>
-    body{margin:0;font-family:sans-serif;background:#f2f3f5;color:#333;}
+    body{margin:0;font-family:sans-serif;background:#f7f8fa;color:#333;}
     header{background:#e53935;color:#fff;padding:1rem;display:flex;justify-content:space-between;align-items:center;}
     .wallet{font-weight:bold;}
-    section{padding:1rem;display:none;}
-    .active{display:block;}
-    input,button{margin:0.5rem 0;padding:0.7rem;border-radius:5px;border:1px solid #ccc;width:100%;box-sizing:border-box;}
+    #loginBox, section{padding:1rem;display:none;}
+    #loginBox.active, section.active{display:block;}
+    input,button,select{margin:0.5rem 0;padding:0.7rem;border-radius:5px;border:1px solid #ccc;width:100%;box-sizing:border-box;}
     button{cursor:pointer;}
     nav{position:fixed;bottom:0;width:100%;display:flex;border-top:1px solid #ccc;background:#fff;}
     nav button{flex:1;padding:0.8rem;border:none;background:#fafafa;font-size:0.9rem;}
@@ -18,13 +18,13 @@
     video{width:100%;border-radius:8px;}
     .top-info{display:flex;align-items:center;gap:10px;margin:0.5rem 0;}
     .top-info img{width:35px;height:35px;border-radius:50%;object-fit:cover;}
-    .action-row{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:8px;}
-    .likes button, .share-btn, .connect-btn{background:#e0e0e0;border:none;border-radius:5px;padding:4px 8px;font-size:0.8rem;cursor:pointer;}
+    .likes button, .share-btn, .connect-btn{background:#e0e0e0;border:none;border-radius:5px;margin-right:5px;padding:3px 8px;font-size:0.8rem;cursor:pointer;}
     .share-btn{background:#42a5f5;color:#fff;}
     .connect-btn{background:yellow;}
     .connect-btn.active{background:green;color:#fff;}
-    .timer{font-size:0.9rem;color:#e68a00;margin-top:5px;}
+    .timer{margin-top:5px;font-size:0.9rem;color:#e68a00;}
     .views{font-size:0.8rem;color:#666;margin-left:auto;}
+    #searchBar{width:100%;padding:0.5rem;margin-bottom:1rem;border-radius:5px;border:1px solid #ccc;}
   </style>
 </head>
 <body>
@@ -32,44 +32,37 @@
     <div>🎥 IndiTubes</div>
     <div class="wallet">Wallet: ₹<span id="wallet">0</span></div>
   </header>
-
-  <div id="loginBox" style="padding:1rem;">
+  <div id="loginBox" class="active">
     <h3>Login / Signup</h3>
-    <input id="uName" placeholder="Username"/><br/>
-    <input id="uPass" type="password" placeholder="Password"/><br/>
-    <input id="chImgFile" type="file" accept="image/*"/><br/>
+    <input id="uName" placeholder="Username"/>
+    <input id="uPass" type="password" placeholder="Password"/>
+    <input id="chImgFile" type="file" accept="image/*"/>
     <button onclick="doLogin()">Go</button>
   </div>
-
   <div id="app">
     <section id="home" class="active">
-      <h3>Home</h3>
-      <div id="homeVideos"></div>
+      <input id="searchBar" placeholder="Search videos..."/>
+      <div id="videoContainer"></div>
     </section>
-
     <section id="upload">
       <h3>Upload Video</h3>
-      <input id="chName" placeholder="Channel Name"/><br/>
-      <input id="vidTitle" placeholder="Video Title"/><br/>
+      <input id="chName" placeholder="Channel Name"/>
       <button id="uploadBtn">⬆ Upload via Cloudinary</button>
     </section>
-
     <section id="profile">
       <h3>Your Profile</h3>
       <div id="meInfo"></div>
       <div id="profVideos"></div>
     </section>
-
     <section id="withdraw">
       <h3>Withdraw</h3>
       <p><strong>Balance:</strong> ₹<span id="balAmt">0</span></p>
-      <input id="wName" placeholder="Name"/><br/>
-      <input id="wContact" placeholder="Email/Phone"/><br/>
-      <input id="wUPI" placeholder="UPI ID"/><br/>
-      <input id="wAmount" placeholder="Amount"/><br/>
+      <input id="wName" placeholder="Name"/>
+      <input id="wContact" placeholder="Email/Phone"/>
+      <input id="wUPI" placeholder="UPI ID"/>
+      <input id="wAmount" placeholder="Amount"/>
       <button onclick="redeem()">Withdraw</button>
     </section>
-
     <nav>
       <button onclick="go('home')">🏠 Home</button>
       <button onclick="go('upload')">⬆ Upload</button>
@@ -81,197 +74,188 @@
 
   <script src="https://upload-widget.cloudinary.com/latest/global/all.js"></script>
   <script>
-    const cloudName = "dtlbk3ncz", uploadPreset = "Inditube";
-    let users = {}, sessions = {}, current = null;
-
+    const cloudName="dtlbk3ncz", uploadPreset="Inditube";
+    let users={}, sessions={}, current=null;
     try {
-      users = JSON.parse(localStorage.getItem("users") || "{}");
-      sessions = JSON.parse(localStorage.getItem("sessions") || "{}");
+      users=JSON.parse(localStorage.users||"{}");
+      sessions=JSON.parse(localStorage.sessions||"{}");
     } catch {}
 
     function saveAll() {
-      localStorage.setItem("users", JSON.stringify(users));
-      localStorage.setItem("sessions", JSON.stringify(sessions));
+      localStorage.users=JSON.stringify(users);
+      localStorage.sessions=JSON.stringify(sessions);
     }
 
     function doLogin() {
-      const u = uName.value.trim(), p = uPass.value.trim(), f = chImgFile.files[0];
-      if (!u || !p) return alert("Enter username & password");
-      if (f) {
-        const r = new FileReader();
-        r.onload = () => completeLogin(u, p, r.result);
+      const u=uName.value.trim(), p=uPass.value.trim(), f=chImgFile.files[0];
+      if(!u||!p) return alert("Username & pass required");
+      if(f) {
+        let r=new FileReader();
+        r.onload=() => completeLogin(u,p,r.result);
         r.readAsDataURL(f);
-      } else {
-        completeLogin(u, p, null);
-      }
+      } else completeLogin(u,p,null);
     }
 
-    function completeLogin(u, p, img) {
-      if (!users[u]) users[u] = p;
-      else if (users[u] !== p) return alert("Wrong password");
-      current = u;
-      if (!sessions[u]) sessions[u] = { channel: u, chImg: img, videos: [], wallet: 0 };
-      else if (img) sessions[u].chImg = img;
-      loginBox.style.display = "none";
-      document.getElementById("app").style.display = "block";
-      renderAll();
+    function completeLogin(u,p,img) {
+      if(!users[u]) users[u]=p;
+      else if(users[u]!==p) return alert("Incorrect password");
+      current=u;
+      if(!sessions[u]) sessions[u]={channel:u,chImg:img,videos:[],wallet:0};
+      else if(img) sessions[u].chImg=img;
+      loginBox.classList.remove("active");
+      document.getElementById("app").style.display="block";
+      saveAll(); renderAll();
     }
 
     function logout() {
-      current = null;
+      current=null;
       location.reload();
     }
 
-    function go(id) {
-      [...document.querySelectorAll("section")].forEach(s => s.classList.remove("active"));
+    function go(id){
+      ["home","upload","profile","withdraw"].forEach(s=>document.getElementById(s).classList.remove("active"));
       document.getElementById(id).classList.add("active");
-      if (id == "withdraw") document.getElementById("balAmt").innerText = sessions[current].wallet;
+      if(id==="withdraw") balAmt.innerText=sessions[current].wallet;
     }
 
-    const widget = cloudinary.createUploadWidget({
-      cloudName, uploadPreset, sources: ["local", "url", "camera"],
-      resourceType: "video", folder: "inditube-videos", multiple: false
-    }, (err, res) => {
-      if (!err && res.event === "success") {
-        const info = res.info;
-        const title = document.getElementById("vidTitle").value.trim() || info.original_filename;
-        const v = {
-          id: Date.now(), title, url: info.secure_url,
-          channel: sessions[current].channel, user: current,
-          likes: 0, dislikes: 0, views: 0, earned: false, connectedUsers: []
-        };
-        sessions[current].videos.push(v); saveAll(); renderAll(); go("home");
+    const widget=cloudinary.createUploadWidget({
+      cloudName, uploadPreset, sources:["local","url","camera"],
+      resourceType:"video",folder:"inditube-videos"
+    },(err,res)=>{
+      if(!err&&res.event==="success"){
+        const info=res.info;
+        const v={id:Date.now(),title:info.original_filename,url:info.secure_url,
+                 channel:sessions[current].channel,user:current,
+                 likes:0,dislikes:0,views:0,earned:false,connected:false};
+        sessions[current].videos.push(v);
+        saveAll(); renderAll(); go("home");
       }
     });
 
-    uploadBtn.onclick = () => {
-      let cn = chName.value.trim();
-      if (cn) sessions[current].channel = cn;
-      saveAll(); widget.open();
+    uploadBtn.onclick = ()=> {
+      const root=sessions[current];
+      const cn=chName.value.trim(); if(cn) root.channel=cn;
+      widget.open();
     };
 
-    function renderAll() {
-      updateWallet(); renderHome(); renderProfile();
+    function renderAll(){
+      updateWallet();
+      renderHome();
+      renderProfile();
     }
 
-    function updateWallet() {
-      document.getElementById("wallet").innerText = sessions[current].wallet;
+    function updateWallet(){
+      wallet.innerText=sessions[current].wallet;
     }
 
-    function renderHome() {
-      const all = Object.values(sessions).flatMap(s => s.videos);
-      homeVideos.innerHTML = all.map(v => {
-        const me = sessions[v.user];
-        const isConnected = v.connectedUsers?.includes(current);
+    function renderHome(){
+      const all=Object.values(sessions).flatMap(s=>s.videos);
+      const filter=searchBar.value.trim().toLowerCase();
+      const arr=all.filter(v=>v.title.toLowerCase().includes(filter)||v.channel.toLowerCase().includes(filter));
+      videoContainer.innerHTML = arr.map(v=>{
+        const me=sessions[v.user];
         return `
           <div class="card">
-            <h4>${v.title}</h4>
+            <strong>${v.title}</strong>
             <video id="vid${v.id}" src="${v.url}" controls></video>
             <div class="top-info">
-              <img src="${me.chImg || ''}" onerror="this.style.display='none'"/>
-              <strong>${v.channel}</strong>
-              <span class="views">${v.views} views</span>
+              <img src="${me.chImg||''}" onerror="this.style.display='none'"/>
+              <strong>${v.channel}</strong><span class="views">${v.views} views</span>
             </div>
-            <div class="action-row">
-              <button onclick="like(${v.id},this)">👍 ${v.likes}</button>
-              <button onclick="dislike(${v.id},this)">👎 ${v.dislikes}</button>
-              <button class="share-btn" onclick="shareVid('${v.url}')">🔗 Share</button>
-              <button class="connect-btn ${isConnected?'active':''}" onclick="connect(${v.id},this)">Connect (${v.connectedUsers?.length || 0})</button>
+            <div>
+              <button onclick="like(${v.id},this)">👍${v.likes}</button>
+              <button onclick="dislike(${v.id},this)">👎${v.dislikes}</button>
+              <button class="share-btn" onclick="shareVid('${v.url}')">Share</button>
+              <button class="connect-btn ${v.connected?'active':''}" onclick="connect(${v.id},this)">Connect</button>
+              <span class="timer" id="timer${v.id}">Watch 30s to earn ₹5</span>
             </div>
-            <div class="timer" id="timer${v.id}">Watch 30s to earn ₹5</div>
           </div>`;
       }).join('');
-      Object.values(sessions).flatMap(s=>s.videos).forEach(setupTimer);
+      arr.forEach(setupTimer);
     }
 
-    function renderProfile() {
-      const me = sessions[current];
-      meInfo.innerHTML = `
+    searchBar.oninput = renderHome;
+
+    function renderProfile(){
+      const me=sessions[current];
+      meInfo.innerHTML=`
         <div class="top-info">
-          <img src="${me.chImg || ''}" onerror="this.style.display='none'"/>
+          <img src="${me.chImg||''}" onerror="this.style.display='none'"/>
           <strong>${me.channel}</strong>
         </div>`;
-      profVideos.innerHTML = me.videos.map(v => `
+      profVideos.innerHTML = me.videos.map(v=>`
         <div class="card">
-          <h4>${v.title}</h4>
+          <strong>${v.title}</strong>
           <video src="${v.url}" controls></video>
-          <div>Likes: ${v.likes} | Dislikes: ${v.dislikes} | Views: ${v.views}</div>
+          <div>👍${v.likes} 👎${v.dislikes} 🔁 ${v.views} views</div>
         </div>`).join('');
     }
 
-    function findVid(id) {
-      return Object.values(sessions).flatMap(s => s.videos).find(v => v.id === id);
+    function findVid(id){
+      return Object.values(sessions).flatMap(s=>s.videos).find(v=>v.id===id);
     }
 
-    function changeVid(id, fn) {
-      Object.values(sessions).forEach(s => {
-        s.videos = s.videos.map(v => (v.id === id ? (fn(v), v) : v));
+    function changeVid(id,fn){
+      Object.values(sessions).forEach(u=>{
+        u.videos = u.videos.map(v=>{if(v.id===id)fn(v);return v});
       });
-      saveAll();
+      saveAll(); renderAll();
     }
 
-    function like(id, btn) {
-      changeVid(id, v => v.likes++);
-      btn.innerText = "👍 " + findVid(id).likes;
+    function like(id,btn){ changeVid(id,v=>v.likes++); btn.innerText="👍"+findVid(id).likes; }
+    function dislike(id,btn){ changeVid(id,v=>v.dislikes++); btn.innerText="👎"+findVid(id).dislikes; }
+    function connect(id,btn){
+      const vid=findVid(id);
+      if(!vid.connected){
+        changeVid(id,v=>v.connected=true);
+        btn.classList.add("active");
+        btn.innerText="Connected";
+      }
     }
 
-    function dislike(id, btn) {
-      changeVid(id, v => v.dislikes++);
-      btn.innerText = "👎 " + findVid(id).dislikes;
+    function shareVid(url){
+      if(navigator.share) navigator.share({url});
+      else prompt("Copy link",url);
     }
 
-    function connect(id, btn) {
-      changeVid(id, v => {
-        if (!v.connectedUsers.includes(current)) v.connectedUsers.push(current);
-      });
-      btn.classList.add("active");
-      btn.innerText = "Connect (" + findVid(id).connectedUsers.length + ")";
-    }
-
-    function shareVid(url) {
-      const msg = `Watch this on IndiTubes:\n${url}`;
-      if (navigator.share) navigator.share({ text: msg });
-      else prompt("Copy link:", msg);
-    }
-
-    function setupTimer(v) {
-      const vid = document.getElementById(`vid${v.id}`);
-      const timer = document.getElementById(`timer${v.id}`);
-      vid.onplay = () => {
-        const earned = findVid(v.id).earned;
-        if (earned) { timer.innerText = "✅ Earned ₹5"; return; }
-        let iv = setInterval(() => {
-          const t = Math.floor(vid.currentTime);
-          timer.innerText = `⏱ ${t}/30 sec`;
-          if (t >= 30) {
+    function setupTimer(v){
+      const vidEl=document.getElementById(`vid${v.id}`);
+      const tEl=document.getElementById(`timer${v.id}`);
+      vidEl.onplay = () => {
+        const vid = findVid(v.id);
+        if(vid.earned){ tEl.innerText="✅ Earned ₹5"; return; }
+        const iv = setInterval(()=>{
+          const t= Math.floor(vidEl.currentTime);
+          tEl.innerText=`⏱ ${t}/30 sec`;
+          if(t>=30){
             clearInterval(iv);
-            changeVid(v.id, vi => {
-              if (!vi.earned) {
-                vi.earned = true;
+            changeVid(v.id,vi=> {
+              if(!vi.earned){
+                vi.earned=true;
                 vi.views++;
-                sessions[vi.user].wallet += 5;
+                sessions[vi.user].wallet+=5;
               }
             });
-            timer.innerText = "✅ Earned ₹5!";
-            updateWallet(); renderProfile();
+            tEl.innerText="✅ Earned ₹5!";
           }
-        }, 500);
+        },500);
       };
     }
 
-    function redeem() {
-      const amt = parseInt(wAmount.value),
-            n = wName.value.trim(),
-            c = wContact.value.trim(),
-            u = wUPI.value.trim();
-      if (!amt || !n || !c || !u) return alert("Fill all fields");
-      if (amt > sessions[current].wallet) return alert("Insufficient balance");
-      sessions[current].wallet -= amt; saveAll(); updateWallet();
-      alert("Your payment is processed in 2-3 hours.");
+    function redeem(){
+      const amt=parseInt(wAmount.value),n=wName.value.trim(),c=wContact.value.trim(),u=wUPI.value.trim();
+      if(!amt||!n||!c||!u)return alert("Complete fields");
+      const bal=sessions[current].wallet;
+      if(amt>bal) return alert("Insufficient");
+      sessions[current].wallet-=amt; saveAll(); updateWallet();
+      alert("Your payment is processed in 2‑3 hours.");
       go("withdraw");
     }
 
-    if (Object.keys(users).length) document.getElementById("app").style.display = "block", renderAll();
+    if(localStorage.users){
+      loginBox.classList.remove("active");
+      document.getElementById("app").style.display="block";
+    }
   </script>
 </body>
 </html>
