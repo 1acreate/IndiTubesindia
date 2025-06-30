@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IndiTubes</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#e53935"/>
   <style>
     body{margin:0;font-family:sans-serif;background:#f2f3f5;color:#333;}
     header{background:#e53935;color:#fff;padding:1rem;display:flex;justify-content:space-between;align-items:center;}
@@ -20,11 +18,12 @@
     video{width:100%;border-radius:8px;}
     .top-info{display:flex;align-items:center;gap:10px;margin:0.5rem 0;}
     .top-info img{width:35px;height:35px;border-radius:50%;object-fit:cover;}
-    .likes button, .share-btn, .connect-btn{background:#e0e0e0;border:none;border-radius:5px;margin-right:5px;padding:3px 8px;font-size:0.8rem;cursor:pointer;}
+    .action-row{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:8px;}
+    .likes button, .share-btn, .connect-btn{background:#e0e0e0;border:none;border-radius:5px;padding:4px 8px;font-size:0.8rem;cursor:pointer;}
     .share-btn{background:#42a5f5;color:#fff;}
     .connect-btn{background:yellow;}
     .connect-btn.active{background:green;color:#fff;}
-    .timer{margin-top:5px;font-size:0.9rem;color:#e68a00;}
+    .timer{font-size:0.9rem;color:#e68a00;margin-top:5px;}
     .views{font-size:0.8rem;color:#666;margin-left:auto;}
   </style>
 </head>
@@ -42,14 +41,25 @@
     <button onclick="doLogin()">Go</button>
   </div>
 
-  <div id="app" style="display:none;">
-    <section id="home" class="active"></section>
+  <div id="app">
+    <section id="home" class="active">
+      <h3>Home</h3>
+      <div id="homeVideos"></div>
+    </section>
+
     <section id="upload">
       <h3>Upload Video</h3>
       <input id="chName" placeholder="Channel Name"/><br/>
+      <input id="vidTitle" placeholder="Video Title"/><br/>
       <button id="uploadBtn">⬆ Upload via Cloudinary</button>
     </section>
-    <section id="profile"><h3>Your Profile</h3><div id="meInfo"></div><div id="profVideos"></div></section>
+
+    <section id="profile">
+      <h3>Your Profile</h3>
+      <div id="meInfo"></div>
+      <div id="profVideos"></div>
+    </section>
+
     <section id="withdraw">
       <h3>Withdraw</h3>
       <p><strong>Balance:</strong> ₹<span id="balAmt">0</span></p>
@@ -59,6 +69,7 @@
       <input id="wAmount" placeholder="Amount"/><br/>
       <button onclick="redeem()">Withdraw</button>
     </section>
+
     <nav>
       <button onclick="go('home')">🏠 Home</button>
       <button onclick="go('upload')">⬆ Upload</button>
@@ -123,10 +134,11 @@
     }, (err, res) => {
       if (!err && res.event === "success") {
         const info = res.info;
+        const title = document.getElementById("vidTitle").value.trim() || info.original_filename;
         const v = {
-          id: Date.now(), title: info.original_filename, url: info.secure_url,
+          id: Date.now(), title, url: info.secure_url,
           channel: sessions[current].channel, user: current,
-          likes: 0, dislikes: 0, views: 0, earned: false, connected: false
+          likes: 0, dislikes: 0, views: 0, earned: false, connectedUsers: []
         };
         sessions[current].videos.push(v); saveAll(); renderAll(); go("home");
       }
@@ -143,31 +155,33 @@
     }
 
     function updateWallet() {
-      wallet.innerText = sessions[current].wallet;
+      document.getElementById("wallet").innerText = sessions[current].wallet;
     }
 
     function renderHome() {
       const all = Object.values(sessions).flatMap(s => s.videos);
-      home.innerHTML = "<h3>Home</h3>" + all.map(v => {
+      homeVideos.innerHTML = all.map(v => {
         const me = sessions[v.user];
+        const isConnected = v.connectedUsers?.includes(current);
         return `
           <div class="card">
+            <h4>${v.title}</h4>
             <video id="vid${v.id}" src="${v.url}" controls></video>
             <div class="top-info">
               <img src="${me.chImg || ''}" onerror="this.style.display='none'"/>
               <strong>${v.channel}</strong>
               <span class="views">${v.views} views</span>
             </div>
-            <div class="likes">
-              <button onclick="like(${v.id},this)">👍${v.likes}</button>
-              <button onclick="dislike(${v.id},this)">👎${v.dislikes}</button>
-              <button class="share-btn" onclick="shareVid('${v.url}')">🔗Share</button>
-              <button class="connect-btn ${v.connected?'active':''}" onclick="connect(${v.id},this)">Connect</button>
-              <span class="timer" id="timer${v.id}">Watch 30s to earn ₹5</span>
+            <div class="action-row">
+              <button onclick="like(${v.id},this)">👍 ${v.likes}</button>
+              <button onclick="dislike(${v.id},this)">👎 ${v.dislikes}</button>
+              <button class="share-btn" onclick="shareVid('${v.url}')">🔗 Share</button>
+              <button class="connect-btn ${isConnected?'active':''}" onclick="connect(${v.id},this)">Connect (${v.connectedUsers?.length || 0})</button>
             </div>
+            <div class="timer" id="timer${v.id}">Watch 30s to earn ₹5</div>
           </div>`;
       }).join('');
-      all.forEach(setupTimer);
+      Object.values(sessions).flatMap(s=>s.videos).forEach(setupTimer);
     }
 
     function renderProfile() {
@@ -178,25 +192,40 @@
           <strong>${me.channel}</strong>
         </div>`;
       profVideos.innerHTML = me.videos.map(v => `
-        <div class="card"><video src="${v.url}" controls></video>
-        <div>Likes: ${v.likes} | Dislikes: ${v.dislikes} | Views: ${v.views}</div></div>
-      `).join('');
+        <div class="card">
+          <h4>${v.title}</h4>
+          <video src="${v.url}" controls></video>
+          <div>Likes: ${v.likes} | Dislikes: ${v.dislikes} | Views: ${v.views}</div>
+        </div>`).join('');
+    }
+
+    function findVid(id) {
+      return Object.values(sessions).flatMap(s => s.videos).find(v => v.id === id);
+    }
+
+    function changeVid(id, fn) {
+      Object.values(sessions).forEach(s => {
+        s.videos = s.videos.map(v => (v.id === id ? (fn(v), v) : v));
+      });
+      saveAll();
     }
 
     function like(id, btn) {
       changeVid(id, v => v.likes++);
-      btn.innerText = "👍" + findVid(id).likes;
+      btn.innerText = "👍 " + findVid(id).likes;
     }
 
     function dislike(id, btn) {
       changeVid(id, v => v.dislikes++);
-      btn.innerText = "👎" + findVid(id).dislikes;
+      btn.innerText = "👎 " + findVid(id).dislikes;
     }
 
     function connect(id, btn) {
-      changeVid(id, v => v.connected = true);
+      changeVid(id, v => {
+        if (!v.connectedUsers.includes(current)) v.connectedUsers.push(current);
+      });
       btn.classList.add("active");
-      btn.innerText = "Connected";
+      btn.innerText = "Connect (" + findVid(id).connectedUsers.length + ")";
     }
 
     function shareVid(url) {
@@ -218,7 +247,8 @@
             clearInterval(iv);
             changeVid(v.id, vi => {
               if (!vi.earned) {
-                vi.earned = true; vi.views++;
+                vi.earned = true;
+                vi.views++;
                 sessions[vi.user].wallet += 5;
               }
             });
@@ -229,39 +259,16 @@
       };
     }
 
-    function findVid(id) {
-      return Object.values(sessions).flatMap(s => s.videos).find(v => v.id === id);
-    }
-
-    function changeVid(id, fn) {
-      Object.values(sessions).forEach(u => {
-        u.videos = u.videos.map(v => {
-          if (v.id === id) fn(v);
-          return v;
-        });
-      });
-      saveAll();
-    }
-
     function redeem() {
       const amt = parseInt(wAmount.value),
             n = wName.value.trim(),
             c = wContact.value.trim(),
             u = wUPI.value.trim();
       if (!amt || !n || !c || !u) return alert("Fill all fields");
-      if (amt > sessions[current].wallet) return alert("Insufficient");
+      if (amt > sessions[current].wallet) return alert("Insufficient balance");
       sessions[current].wallet -= amt; saveAll(); updateWallet();
-      alert(`Your payment is processed in 2‑3 hours.`);
+      alert("Your payment is processed in 2-3 hours.");
       go("withdraw");
-    }
-
-    // PWA install
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('SW registered'))
-        .catch(err => console.log('SW error:', err));
-      });
     }
 
     if (Object.keys(users).length) document.getElementById("app").style.display = "block", renderAll();
