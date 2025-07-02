@@ -3,218 +3,205 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IndiTube with Supabase</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <title>IndiTube</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
-    nav { background: #2c3e50; padding: 10px; display: flex; justify-content: space-around; }
-    nav a { color: white; font-weight: bold; cursor: pointer; text-decoration: none; }
-    header { background: #e91e63; color: white; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; }
+    header { background: #e91e63; color: white; padding: 15px; font-size: 24px; text-align: center; font-weight: bold; position: relative; }
+    #coinCounter { position: absolute; right: 20px; top: 15px; font-size: 16px; background: #4caf50; padding: 5px 10px; border-radius: 20px; }
+    nav { background: #333; display: flex; justify-content: space-around; padding: 10px; }
+    nav a { color: white; font-weight: bold; text-decoration: none; cursor: pointer; }
     .container { padding: 20px; }
     .hidden { display: none; }
-    .video-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .video-card { background: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     .channel-info { display: flex; align-items: center; margin-bottom: 10px; }
     .channel-img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
+    .video-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .video-controls button { padding: 5px 12px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; font-size: 12px; }
+    .like { background: #2196f3; color: white; }
+    .dislike { background: #f44336; color: white; }
+    .share { background: #9c27b0; color: white; }
+    .connect { background: #ffeb3b; color: black; }
+    .connect.connected { background: #4caf50; color: white; }
     .earn-timer { font-size: 14px; color: green; margin-top: 5px; }
-    .video-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-    .video-controls button { border-radius: 50px; padding: 6px 12px; font-weight: bold; border: none; cursor: pointer; }
-    .connect-btn { background: #ffeb3b; }
-    .connect-btn.connected { background: #4caf50; color: white; }
-    .talkies input { width: 70%; padding: 6px; margin-top: 10px; }
-    .talkies button { padding: 6px 10px; background: #2196f3; color: white; border: none; margin-left: 5px; }
+    #progressBar { width: 100%; background: #ccc; border-radius: 5px; overflow: hidden; height: 20px; margin-top: 10px; }
+    #progressFill { height: 100%; width: 0%; background: #4caf50; text-align: center; color: white; font-size: 12px; }
   </style>
 </head>
 <body>
+  <header>
+    IndiTube <span id="coinCounter">Coins: 0</span>
+  </header>
+  <nav>
+    <a onclick="showPage('gallery')">Gallery</a>
+    <a onclick="showPage('upload')">Upload</a>
+    <a onclick="showPage('dashboard')">Dashboard</a>
+  </nav>
+  <div class="container">
+    <div id="login">
+      <h2>Login</h2>
+      <input type="text" id="username" placeholder="Your Name" /><br /><br />
+      <input type="password" id="password" placeholder="Password" /><br /><br />
+      <button onclick="loginUser()">Login</button>
+    </div>
 
-<header>IndiTube</header>
-<nav>
-  <a onclick="showPage('gallery')">Gallery</a>
-  <a onclick="showPage('upload')">Upload</a>
-  <a onclick="showPage('dashboard')">Dashboard</a>
-  <a onclick="showPage('withdraw')">Withdraw</a>
-</nav>
+    <div id="upload" class="hidden">
+      <h2>Upload Video</h2>
+      <input type="text" id="channelName" placeholder="Channel Name" /><br /><br />
+      <input type="file" id="channelImage" /><br /><br />
+      <input type="text" id="videoTitle" placeholder="Video Title" /><br /><br />
+      <input type="file" id="videoFile" /><br /><br />
+      <div id="progressBar"><div id="progressFill">0%</div></div><br />
+      <button onclick="uploadVideo()">Upload</button>
+    </div>
 
-<div class="container">
-  <div id="login">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Name" /><br /><br />
-    <input type="password" id="password" placeholder="Password" /><br /><br />
-    <button onclick="loginUser()">Login</button>
+    <div id="gallery" class="hidden">
+      <h2>Public Gallery</h2>
+      <div id="video-list"></div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+      <h2>Your Dashboard</h2>
+      <div id="dashboard-list"></div>
+    </div>
   </div>
 
-  <div id="gallery" class="hidden">
-    <h2>Public Gallery</h2>
-    <div id="video-list"></div>
-  </div>
+  <audio id="connectSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
 
-  <div id="upload" class="hidden">
-    <h2>Upload Video</h2>
-    <input type="text" id="channelName" placeholder="Channel Name" /><br/><br/>
-    <input type="file" id="channelImage" /><br/><br/>
-    <input type="file" id="videoFile" accept="video/mp4" /><br/><br/>
-    <input type="text" id="videoTitleInput" placeholder="Video Title" /><br/><br/>
-    <button onclick="uploadVideoToSupabase()">Upload Video</button>
-  </div>
+  <script>
+    const CLOUD_NAME = "dtlbk3ncz";
+    const UPLOAD_PRESET = "Inditube";
+    const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL";
+    let user = null;
+    let allVideos = [];
+    let coins = 0;
 
-  <div id="dashboard" class="hidden">
-    <h2>Your Dashboard</h2>
-    <div id="dashboard-list"></div>
-  </div>
-
-  <div id="withdraw" class="hidden">
-    <h2>Withdraw Earnings</h2>
-    <input type="text" placeholder="Your Name"/><br/><br/>
-    <input type="text" placeholder="UPI ID"/><br/><br/>
-    <button onclick="alert('Your payment will be sent in a few hours.')">Submit</button>
-  </div>
-</div>
-
-<script>
-const SUPABASE_URL = 'https://adeeyjsudmaqktkrpjrh.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkZWV5anN1ZG1hcWt0a3JwanJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMDUwOTYsImV4cCI6MjA2NjY4MTA5Nn0.uLgQOyeLs28EYq87ylxj9XSeN2TKplX7iPrw6jRo4eQ';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let uploadedVideos = [];
-
-function showPage(page) {
-  ['login', 'gallery', 'upload', 'dashboard', 'withdraw'].forEach(id => {
-    document.getElementById(id).classList.add('hidden');
-  });
-  document.getElementById(page).classList.remove('hidden');
-  if (page === 'dashboard') renderDashboard();
-  if (page === 'gallery') renderGallery();
-}
-
-function loginUser() {
-  const name = document.getElementById("username").value;
-  const pass = document.getElementById("password").value;
-  if (name && pass) {
-    localStorage.setItem("loggedIn", name);
-    showPage("gallery");
-  } else {
-    alert("Please enter valid credentials");
-  }
-}
-
-async function uploadVideoToSupabase() {
-  const channelName = document.getElementById("channelName").value;
-  const videoTitle = document.getElementById("videoTitleInput").value;
-  const videoFile = document.getElementById("videoFile").files[0];
-  const channelImage = document.getElementById("channelImage").files[0];
-
-  if (!channelName || !videoTitle || !videoFile || !channelImage) {
-    alert("Please provide all required fields.");
-    return;
-  }
-
-  const imageReader = new FileReader();
-  imageReader.onload = async () => {
-    const channelImageUrl = imageReader.result;
-
-    const { data, error } = await supabase.storage.from('videos').upload(`public/${Date.now()}-${videoFile.name}`, videoFile);
-    if (error) {
-      alert('Upload failed');
-      return;
+    function showPage(page) {
+      ["login", "upload", "gallery", "dashboard"].forEach(p => document.getElementById(p).classList.add("hidden"));
+      document.getElementById(page).classList.remove("hidden");
+      if (page === "gallery") renderVideos(allVideos, "video-list");
+      if (page === "dashboard") renderVideos(allVideos.filter(v => v.user === user), "dashboard-list");
     }
 
-    const videoUrl = `${SUPABASE_URL}/storage/v1/object/public/${data.path}`;
-    const uploader = localStorage.getItem("loggedIn") || "Guest";
-    const videoObj = { videoUrl, videoTitle, channelName, channelImageUrl, uploader };
-    uploadedVideos.push(videoObj);
-    renderGallery();
-    renderDashboard();
-    alert("Video uploaded successfully!");
-  };
-  imageReader.readAsDataURL(channelImage);
-}
-
-function renderGallery() {
-  const list = document.getElementById("video-list");
-  list.innerHTML = '';
-  uploadedVideos.forEach((v, index) => list.appendChild(createVideoCard(v, index)));
-}
-
-function renderDashboard() {
-  const list = document.getElementById("dashboard-list");
-  list.innerHTML = '';
-  uploadedVideos.forEach((v, index) => {
-    if (v.uploader === localStorage.getItem("loggedIn")) {
-      list.appendChild(createVideoCard(v, index));
+    function loginUser() {
+      const uname = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (uname && pass) {
+        user = uname;
+        localStorage.setItem("loggedIn", user);
+        fetchVideos();
+        showPage("gallery");
+      } else {
+        alert("Enter valid credentials");
+      }
     }
-  });
-}
 
-function createVideoCard(v, index) {
-  const card = document.createElement("div");
-  card.className = "video-card";
-  const timerId = `timer-${index}`;
-  card.innerHTML = `
-    <div class="channel-info">
-      <img src="${v.channelImageUrl}" class="channel-img" alt="Channel Image" />
-      <b>${v.channelName}</b>
-    </div>
-    <h4>${v.videoTitle}</h4>
-    <video controls width="100%" onplay="startEarning('${timerId}')">
-      <source src="${v.videoUrl}" type="video/mp4">
-    </video>
-    <div class="earn-timer" id="${timerId}">Earnings: ₹0</div>
-    <div class="video-controls">
-      <button onclick="likeVideo(this)" style="background:#2196f3;color:white;">👍 Like (<span>0</span>)</button>
-      <button onclick="dislikeVideo(this)" style="background:#f44336;color:white;">👎 Dislike (<span>0</span>)</button>
-      <button onclick="shareVideo('${v.videoUrl}')" style="background:#9c27b0;color:white;">🔗 Share</button>
-    </div>
-    <div class="talkies">
-      <input type="text" placeholder="Talkies (Comment here)" />
-      <button onclick="postComment(this)">Post</button>
-    </div>
-  `;
-  return card;
-}
+    async function uploadVideo() {
+      const chName = document.getElementById("channelName").value;
+      const title = document.getElementById("videoTitle").value;
+      const chImg = document.getElementById("channelImage").files[0];
+      const vidFile = document.getElementById("videoFile").files[0];
 
-function likeVideo(btn) {
-  let span = btn.querySelector("span");
-  span.innerText = parseInt(span.innerText) + 1;
-}
+      if (!chName || !title || !chImg || !vidFile || !user) return alert("Fill all fields");
 
-function dislikeVideo(btn) {
-  let span = btn.querySelector("span");
-  span.innerText = parseInt(span.innerText) + 1;
-}
+      const imgUrl = await uploadToCloudinary(chImg, 'image');
+      const vidUrl = await uploadToCloudinary(vidFile, 'video');
 
-function shareVideo(url) {
-  navigator.clipboard.writeText(url);
-  alert("Video link copied!");
-}
+      const newVideo = { channel: chName, title, user, img: imgUrl, video: vidUrl };
 
-function postComment(btn) {
-  const input = btn.previousElementSibling;
-  if (input.value.trim()) {
-    alert("Comment: " + input.value);
-    input.value = "";
-  }
-}
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newVideo),
+      });
 
-function startEarning(timerId) {
-  const div = document.getElementById(timerId);
-  if (!div.dataset.started) {
-    div.dataset.started = true;
-    let earning = 0;
-    setInterval(() => {
-      earning += 5;
-      div.innerText = `Earnings: ₹${earning}`;
-    }, 30000);
-  }
-}
+      allVideos.push(newVideo);
+      alert("Uploaded successfully");
+      showPage("gallery");
+    }
 
-window.onload = () => {
-  const loggedIn = localStorage.getItem("loggedIn");
-  if (loggedIn) {
-    document.getElementById("login").classList.add("hidden");
-    showPage("gallery");
-  }
-};
-</script>
+    async function uploadToCloudinary(file, type) {
+      const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${type}/upload`;
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", UPLOAD_PRESET);
 
+      const xhr = new XMLHttpRequest();
+      return new Promise((resolve, reject) => {
+        xhr.open("POST", url);
+        xhr.upload.onprogress = (e) => {
+          const percent = Math.round((e.loaded * 100) / e.total);
+          document.getElementById("progressFill").style.width = percent + "%";
+          document.getElementById("progressFill").innerText = percent + "%";
+        };
+        xhr.onload = () => resolve(JSON.parse(xhr.responseText).secure_url);
+        xhr.onerror = () => reject(xhr.statusText);
+        xhr.send(form);
+      });
+    }
+
+    async function fetchVideos() {
+      const res = await fetch(SCRIPT_URL);
+      const data = await res.json();
+      allVideos = data;
+    }
+
+    function renderVideos(videos, containerId) {
+      document.getElementById(containerId).innerHTML = videos.map((v, i) => `
+        <div class="video-card">
+          <div class="channel-info">
+            <img src="${v.img}" class="channel-img" />
+            <b>${v.channel}</b>
+          </div>
+          <h4>${v.title}</h4>
+          <video src="${v.video}" controls width="100%" onplay="startEarning(this, ${i})"></video>
+          <div class="video-controls">
+            <button class="like">Like</button>
+            <button class="dislike">Dislike</button>
+            <button class="share">Share</button>
+            <button class="connect" onclick="connectClick(this)">Connect (<span>0</span>)</button>
+          </div>
+          <div class="earn-timer" id="earn-${i}">Earnings: ₹0 (Live)</div>
+        </div>`).join('');
+    }
+
+    function startEarning(video, index) {
+      if (video.dataset.earningStarted) return;
+      video.dataset.earningStarted = true;
+      let sec = 0;
+      const timer = setInterval(() => {
+        if (video.paused || video.ended) return;
+        sec++;
+        if (sec % 10 === 0) {
+          coins++;
+          const rupees = (coins * 0.35).toFixed(2);
+          document.getElementById("coinCounter").innerText = `Coins: ${coins} (₹${rupees})`;
+        }
+        const r = ((sec * 0.35) / 3).toFixed(2);
+        document.getElementById(`earn-${index}`).innerText = `Earnings: ₹${r} (Live)`;
+      }, 1000);
+    }
+
+    function connectClick(btn) {
+      if (btn.classList.contains("connected")) return;
+      btn.classList.add("connected");
+      const audio = document.getElementById("connectSound");
+      audio.play();
+      let countSpan = btn.querySelector("span");
+      let count = parseInt(countSpan.innerText);
+      countSpan.innerText = count + 1;
+    }
+
+    window.onload = () => {
+      const storedUser = localStorage.getItem("loggedIn");
+      if (storedUser) {
+        user = storedUser;
+        fetchVideos();
+        showPage("gallery");
+      } else {
+        showPage("login");
+      }
+    }
+  </script>
 </body>
 </html>
 
