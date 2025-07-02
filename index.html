@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IndiTube</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; }
+    body { font-family: Arial, sans-serif; background: #f2f2f2; margin: 0; }
     header { background: #e91e63; color: white; padding: 15px; font-size: 24px; text-align: center; font-weight: bold; position: relative; }
     #coinCounter { position: absolute; right: 20px; top: 15px; font-size: 16px; background: #4caf50; padding: 5px 10px; border-radius: 20px; }
     nav { background: #333; display: flex; justify-content: space-around; padding: 10px; }
@@ -25,9 +25,15 @@
     .earn-timer { font-size: 14px; color: green; margin-top: 5px; }
     #progressBar { width: 100%; background: #ccc; border-radius: 5px; overflow: hidden; height: 20px; margin-top: 10px; }
     #progressFill { height: 100%; width: 0%; background: #4caf50; text-align: center; color: white; font-size: 12px; }
+    #intro { background: white; text-align: center; padding: 30px; font-size: 20px; display: none; }
   </style>
 </head>
 <body>
+  <div id="intro">
+    <img src="https://flagcdn.com/in.svg" width="60" alt="Indian Flag" /><br /><br />
+    <strong>YouTube of India - IndiTube</strong>
+  </div>
+
   <header>
     IndiTube <span id="coinCounter">Coins: 0</span>
   </header>
@@ -35,6 +41,7 @@
     <a onclick="showPage('gallery')">Gallery</a>
     <a onclick="showPage('upload')">Upload</a>
     <a onclick="showPage('dashboard')">Dashboard</a>
+    <a onclick="redirectToForm()">Withdraw</a>
   </nav>
   <div class="container">
     <div id="login">
@@ -71,6 +78,8 @@
     const CLOUD_NAME = "dtlbk3ncz";
     const UPLOAD_PRESET = "Inditube";
     const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL";
+    const COMMENT_BIN_URL = "https://api.jsonbin.io/v3/b/YOUR_COMMENT_BIN_ID";
+    const JSONBIN_SECRET = "YOUR_SECRET_KEY";
     let user = null;
     let allVideos = [];
     let coins = 0;
@@ -191,15 +200,24 @@
       countSpan.innerText = count + 1;
     }
 
+    function redirectToForm() {
+      alert("Please add ₹32 first before first payout.");
+      window.open("https://forms.gle/uK6Vsrt8F8zsrBAS9", "_blank");
+    }
+
     window.onload = () => {
-      const storedUser = localStorage.getItem("loggedIn");
-      if (storedUser) {
-        user = storedUser;
-        fetchVideos();
-        showPage("gallery");
-      } else {
-        showPage("login");
-      }
+      document.getElementById("intro").style.display = "block";
+      setTimeout(() => {
+        document.getElementById("intro").style.display = "none";
+        const storedUser = localStorage.getItem("loggedIn");
+        if (storedUser) {
+          user = storedUser;
+          fetchVideos();
+          showPage("gallery");
+        } else {
+          showPage("login");
+        }
+      }, 3000);
     }
   </script>
 </body>
