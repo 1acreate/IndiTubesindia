@@ -2,47 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IndiTube</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: Arial, sans-serif; background: #f2f2f2; margin: 0; }
-    header { background: #e91e63; color: white; padding: 15px; font-size: 24px; text-align: center; font-weight: bold; position: relative; }
-    #coinCounter { position: absolute; right: 20px; top: 15px; font-size: 16px; background: #4caf50; padding: 5px 10px; border-radius: 20px; }
-    nav { background: #333; display: flex; justify-content: space-around; padding: 10px; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f9f9f9; }
+    header { background: #e91e63; color: white; padding: 15px; text-align: center; font-size: 24px; position: relative; }
+    #coinCounter, #earningCounter {
+      position: absolute;
+      font-size: 13px;
+      top: 15px;
+      background: #4caf50;
+      padding: 5px 10px;
+      border-radius: 20px;
+    }
+    #coinCounter { left: 15px; }
+    #earningCounter { right: 15px; }
+
+    nav { display: flex; justify-content: space-around; background: #333; padding: 10px; }
     nav a { color: white; font-weight: bold; text-decoration: none; cursor: pointer; }
+
     .container { padding: 20px; }
     .hidden { display: none; }
-    .video-card { background: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    .channel-info { display: flex; align-items: center; margin-bottom: 10px; }
+
+    .video-card { background: white; padding: 15px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+    .channel-info { display: flex; align-items: center; }
     .channel-img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
-    .video-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-    .video-controls button { padding: 5px 12px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; font-size: 12px; }
+
+    .video-controls button {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      border-radius: 50px;
+      margin-right: 8px;
+    }
     .like { background: #2196f3; color: white; }
     .dislike { background: #f44336; color: white; }
     .share { background: #9c27b0; color: white; }
     .connect { background: #ffeb3b; color: black; }
     .connect.connected { background: #4caf50; color: white; }
-    .earn-timer { font-size: 14px; color: green; margin-top: 5px; }
-    #progressBar { width: 100%; background: #ccc; border-radius: 5px; overflow: hidden; height: 20px; margin-top: 10px; }
+
+    .earn-timer { color: green; margin-top: 5px; font-size: 14px; }
+    #progressBar { width: 100%; background: #ccc; border-radius: 5px; height: 20px; margin-top: 10px; }
     #progressFill { height: 100%; width: 0%; background: #4caf50; text-align: center; color: white; font-size: 12px; }
-    #intro { background: white; text-align: center; padding: 30px; font-size: 20px; display: none; }
+
+    .talkies input { width: 70%; padding: 6px; margin-top: 10px; }
+    .talkies button { padding: 6px 10px; background: #2196f3; color: white; border: none; margin-left: 5px; }
   </style>
 </head>
 <body>
-  <div id="intro">
-    <img src="https://flagcdn.com/in.svg" width="60" alt="Indian Flag" /><br /><br />
-    <strong>YouTube of India - IndiTube</strong>
-  </div>
-
   <header>
-    IndiTube <span id="coinCounter">Coins: 0</span>
+    IndiTube
+    <div id="coinCounter">Coins: 0</div>
+    <div id="earningCounter">Earning: ₹0</div>
   </header>
+
   <nav>
     <a onclick="showPage('gallery')">Gallery</a>
     <a onclick="showPage('upload')">Upload</a>
     <a onclick="showPage('dashboard')">Dashboard</a>
-    <a onclick="redirectToForm()">Withdraw</a>
+    <a onclick="showPage('withdraw')">Withdraw</a>
   </nav>
+
   <div class="container">
     <div id="login">
       <h2>Login</h2>
@@ -70,6 +93,11 @@
       <h2>Your Dashboard</h2>
       <div id="dashboard-list"></div>
     </div>
+
+    <div id="withdraw" class="hidden">
+      <h2>Withdraw Earnings</h2>
+      <iframe title="Withdraw Form" src="https://form.jotform.com/251825401055449" width="100%" height="600px" frameborder="0" style="border:none; overflow:auto;"></iframe>
+    </div>
   </div>
 
   <audio id="connectSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
@@ -77,15 +105,16 @@
   <script>
     const CLOUD_NAME = "dtlbk3ncz";
     const UPLOAD_PRESET = "Inditube";
-    const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL";
-    const COMMENT_BIN_URL = "https://api.jsonbin.io/v3/b/YOUR_COMMENT_BIN_ID";
-    const JSONBIN_SECRET = "YOUR_SECRET_KEY";
+    const SCRIPT_URL = "https://api.jsonbin.io/v3/b/6864a57e8a456b7966b9d3f1"; // JSONBin link
+    const JSONBIN_SECRET = "REPLACE_WITH_YOUR_SECRET_KEY";
+    
     let user = null;
     let allVideos = [];
     let coins = 0;
+    let earnings = 0;
 
     function showPage(page) {
-      ["login", "upload", "gallery", "dashboard"].forEach(p => document.getElementById(p).classList.add("hidden"));
+      ["login", "upload", "gallery", "dashboard", "withdraw"].forEach(p => document.getElementById(p).classList.add("hidden"));
       document.getElementById(page).classList.remove("hidden");
       if (page === "gallery") renderVideos(allVideos, "video-list");
       if (page === "dashboard") renderVideos(allVideos.filter(v => v.user === user), "dashboard-list");
@@ -109,19 +138,13 @@
       const title = document.getElementById("videoTitle").value;
       const chImg = document.getElementById("channelImage").files[0];
       const vidFile = document.getElementById("videoFile").files[0];
-
       if (!chName || !title || !chImg || !vidFile || !user) return alert("Fill all fields");
 
       const imgUrl = await uploadToCloudinary(chImg, 'image');
       const vidUrl = await uploadToCloudinary(vidFile, 'video');
 
       const newVideo = { channel: chName, title, user, img: imgUrl, video: vidUrl };
-
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newVideo),
-      });
+      await saveToJsonBin(newVideo);
 
       allVideos.push(newVideo);
       alert("Uploaded successfully");
@@ -148,10 +171,23 @@
       });
     }
 
+    async function saveToJsonBin(videoData) {
+      await fetch(SCRIPT_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_SECRET
+        },
+        body: JSON.stringify([...allVideos, videoData])
+      });
+    }
+
     async function fetchVideos() {
-      const res = await fetch(SCRIPT_URL);
+      const res = await fetch(SCRIPT_URL, {
+        headers: { "X-Master-Key": JSONBIN_SECRET }
+      });
       const data = await res.json();
-      allVideos = data;
+      allVideos = data.record || [];
     }
 
     function renderVideos(videos, containerId) {
@@ -161,33 +197,26 @@
             <img src="${v.img}" class="channel-img" />
             <b>${v.channel}</b>
           </div>
-          <h4>${v.title}</h4>
+          <h4>${v.title} - ₹5 Tag</h4>
           <video src="${v.video}" controls width="100%" onplay="startEarning(this, ${i})"></video>
           <div class="video-controls">
-            <button class="like">Like</button>
-            <button class="dislike">Dislike</button>
-            <button class="share">Share</button>
-            <button class="connect" onclick="connectClick(this)">Connect (<span>0</span>)</button>
+            <button class="like" onclick="increment(this)">👍 Like (<span>0</span>)</button>
+            <button class="dislike" onclick="increment(this)">👎 Dislike (<span>0</span>)</button>
+            <button class="share" onclick="shareVideo('${v.video}')">🔗 Share</button>
+            <button class="connect" onclick="connectClick(this)">⚡ Connect (<span>0</span>)</button>
           </div>
-          <div class="earn-timer" id="earn-${i}">Earnings: ₹0 (Live)</div>
+          <div class="earn-timer" id="earn-${i}">Earnings: ₹0</div>
         </div>`).join('');
     }
 
-    function startEarning(video, index) {
-      if (video.dataset.earningStarted) return;
-      video.dataset.earningStarted = true;
-      let sec = 0;
-      const timer = setInterval(() => {
-        if (video.paused || video.ended) return;
-        sec++;
-        if (sec % 10 === 0) {
-          coins++;
-          const rupees = (coins * 0.35).toFixed(2);
-          document.getElementById("coinCounter").innerText = `Coins: ${coins} (₹${rupees})`;
-        }
-        const r = ((sec * 0.35) / 3).toFixed(2);
-        document.getElementById(`earn-${index}`).innerText = `Earnings: ₹${r} (Live)`;
-      }, 1000);
+    function increment(btn) {
+      let span = btn.querySelector("span");
+      span.innerText = parseInt(span.innerText) + 1;
+    }
+
+    function shareVideo(url) {
+      navigator.clipboard.writeText(url);
+      alert("Link copied!");
     }
 
     function connectClick(btn) {
@@ -200,26 +229,32 @@
       countSpan.innerText = count + 1;
     }
 
-    function redirectToForm() {
-      alert("Please add ₹32 first before first payout.");
-      window.open("https://forms.gle/uK6Vsrt8F8zsrBAS9", "_blank");
+    function startEarning(video, index) {
+      if (video.dataset.earningStarted) return;
+      video.dataset.earningStarted = true;
+      let sec = 0;
+      const timer = setInterval(() => {
+        if (video.paused || video.ended) return;
+        sec++;
+        if (sec % 30 === 0) {
+          coins++;
+          earnings += 5;
+          document.getElementById("coinCounter").innerText = `Coins: ${coins}`;
+          document.getElementById("earningCounter").innerText = `Earning: ₹${earnings}`;
+        }
+        document.getElementById(`earn-${index}`).innerText = `Earnings: ₹${(sec * 5 / 30).toFixed(2)}`;
+      }, 1000);
     }
 
     window.onload = () => {
-      document.getElementById("intro").style.display = "block";
-      setTimeout(() => {
-        document.getElementById("intro").style.display = "none";
-        const storedUser = localStorage.getItem("loggedIn");
-        if (storedUser) {
-          user = storedUser;
-          fetchVideos();
-          showPage("gallery");
-        } else {
-          showPage("login");
-        }
-      }, 3000);
-    }
+      const storedUser = localStorage.getItem("loggedIn");
+      if (storedUser) {
+        user = storedUser;
+        fetchVideos().then(() => showPage("gallery"));
+      } else {
+        showPage("login");
+      }
+    };
   </script>
 </body>
 </html>
-
