@@ -5,138 +5,36 @@
   <title>IndiTube - YouTube of India</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-    }
-    header {
-      background: #e91e63;
-      color: white;
-      padding: 15px;
-      font-size: 22px;
-      font-weight: bold;
-      text-align: center;
-      position: relative;
-    }
-    #coinCounter, #earningCounter {
-      position: absolute;
-      top: 15px;
-      font-size: 13px;
-      background: #4caf50;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    #coinCounter { left: 15px; }
-    #earningCounter { right: 15px; }
-    nav {
-      background: #222;
-      display: flex;
-      justify-content: space-around;
-      padding: 10px;
-    }
-    nav button {
-      background: #444;
-      color: white;
-      border: none;
-      border-radius: 30px;
-      padding: 10px 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .container {
-      padding: 20px;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f4; }
+    header { background: #e91e63; color: white; padding: 15px; font-size: 22px; font-weight: bold; position: relative; text-align: center; }
+    #coinCounter, #earningCounter { position: absolute; top: 15px; font-size: 13px; background: #4caf50; padding: 4px 10px; border-radius: 20px; }
+    #coinCounter { left: 15px; } #earningCounter { right: 15px; }
+    nav { background: #222; display: flex; overflow-x: auto; white-space: nowrap; }
+    nav button { background: #444; color: white; border: none; border-radius: 30px; padding: 10px 18px; margin: 5px; cursor: pointer; flex-shrink: 0; }
+    .container { padding: 20px; }
     .hidden { display: none; }
-
-    .video-card {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .channel-info {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .channel-img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
+    .video-card { background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 15px; margin-bottom: 20px; }
+    .channel-info { display: flex; align-items: center; margin-bottom: 10px; }
+    .channel-img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
+    iframe.youtube-frame { width: 100%; height: 250px; border: none; border-radius: 10px; }
+    .earn-timer { font-size: 14px; color: green; margin-top: 5px; }
+    .video-controls { margin-top: 10px; }
     .video-controls button {
-      padding: 6px 12px;
+      padding: 6px 14px;
       font-size: 13px;
       font-weight: bold;
       border: none;
-      border-radius: 30px;
+      border-radius: 20px;
       margin-right: 8px;
       cursor: pointer;
+      transition: 0.3s;
     }
     .like { background: #2196f3; color: white; }
     .dislike { background: #f44336; color: white; }
     .share { background: #9c27b0; color: white; }
     .connect { background: #ffeb3b; color: black; }
     .connect.connected { background: #4caf50; color: white; }
-    .earn-timer { font-size: 14px; color: green; margin-top: 5px; }
-
-    input[type="text"], input[type="password"] {
-      padding: 8px;
-      width: 90%;
-      margin: 8px 0;
-    }
-    #progressBar {
-      width: 100%;
-      background: #ccc;
-      border-radius: 5px;
-      height: 18px;
-      margin: 10px 0;
-    }
-    #progressFill {
-      height: 100%;
-      width: 0%;
-      background: #4caf50;
-      text-align: center;
-      color: white;
-      font-size: 12px;
-      border-radius: 5px;
-    }
-
-    .talkies input {
-      width: 70%;
-      padding: 6px;
-      margin-top: 10px;
-    }
-    .talkies button {
-      padding: 6px 10px;
-      background: #2196f3;
-      color: white;
-      border: none;
-      margin-left: 5px;
-    }
-
-    iframe.youtube-frame {
-      width: 100%;
-      height: 250px;
-      border-radius: 10px;
-      border: none;
-    }
-
-    .tag-price {
-      background: #4caf50;
-      color: white;
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 20px;
-      float: right;
-    }
-
-    #exploreResults iframe {
-      margin-bottom: 10px;
-    }
+    input#searchQuery { width: 80%; padding: 10px; margin: 10px auto; display: block; border-radius: 20px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
@@ -147,278 +45,141 @@
   </header>
 
   <nav>
-    <button onclick="showPage('gallery')">Gallery</button>
-    <button onclick="showPage('upload')">Upload</button>
-    <button onclick="showPage('dashboard')">Dashboard</button>
-    <button onclick="showPage('withdraw')">Withdraw</button>
-    <button onclick="showPage('explore')">Explore</button>
-    <button onclick="showPage('ytvideos')">YT Videos</button>
+    <button onclick="showPage('dashboard');">Dashboard</button>
+    <button onclick="showPage('upload');">Upload</button>
+    <button onclick="showPage('explore');">IndiPlay</button>
+    <button onclick="showPage('ytvideos');">IndiTube Picks</button>
   </nav>
 
+  <input id="searchQuery" placeholder="Search videos..." onkeydown="if(event.key==='Enter') searchYouTube()" />
+
   <div class="container">
-    <div id="login">
-      <h2>Login</h2>
-      <input type="text" id="username" placeholder="Your Name"/><br/>
-      <input type="password" id="password" placeholder="Password"/><br/>
-      <button onclick="loginUser()">Login</button>
-    </div>
+    <div id="ytvideos"><h2>IndiTube Picks</h2><div id="ytvideo-list"></div></div>
+    <div id="dashboard" class="hidden"><h2>Your Dashboard</h2><div id="dashboard-list"></div></div>
+    <div id="explore" class="hidden"><h2>IndiPlay</h2><div id="exploreResults"></div></div>
+  </div>
 
-    <div id="gallery" class="hidden">
-      <h2>Public Gallery</h2>
-      <div id="video-list"></div>
-    </div>
+  <audio id="connectSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
 
-    <div id="upload" class="hidden">
-      <h2>Upload Video</h2>
-      <input type="text" id="channelName" placeholder="Channel Name"/><br/>
-      <input type="file" id="channelImage"/><br/>
-      <input type="text" id="videoTitle" placeholder="Video Title"/><br/>
-      <input type="file" id="videoFile"/><br/>
-      <div id="progressBar"><div id="progressFill">0%</div></div>
-      <button onclick="uploadVideo()">Upload</button>
-    </div>
+  <script>
+    let coins = 0;
+    let earnings = 0;
+    let user = 'Guest';
+    const allYT = [];
 
-    <div id="dashboard" class="hidden">
-      <h2>Your Dashboard</h2>
-      <div id="dashboard-list"></div>
-    </div>
-
-    <div id="withdraw" class="hidden">
-      <h2>Withdraw Form</h2>
-      <iframe src="https://form.jotform.com/251825401055449" style="width:100%;height:500px;border:none;"></iframe>
-    </div>
-
-    <div id="explore" class="hidden">
-      <h2>Explore YouTube</h2>
-      <input type="text" id="searchQuery" placeholder="Search YouTube videos..." />
-      <button onclick="searchYouTube()">Search</button>
-      <div id="exploreResults"></div>
-    </div>
-
-    <div id="ytvideos" class="hidden">
-      <h2>YouTube Added Videos</h2>
-      <div id="ytvideo-list"></div>
-    </div>
-
-    <audio id="connectSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
-    <script>
-const CLOUD_NAME = "dtlbk3ncz";
-const UPLOAD_PRESET = "Inditube";
-const JSONBIN_URL = "https://api.jsonbin.io/v3/b/6864a57e8a456b7966b9d3f1";
-const JSONBIN_KEY = "$2a$10$wp2GsmY163swWPfE6IHbyuQXblejyK.xvg78rrl9ISCwOOSjjlpCi";
-const YOUTUBE_API_KEY = "AIzaSyBQ8YHCLlRkj3lptljMnpWdSdnO2h0c93M";
-
-let user = null;
-let allVideos = [];
-let coins = 0;
-let earnings = 0;
-
-function showPage(page) {
-  ["login", "upload", "gallery", "dashboard", "withdraw", "explore", "ytvideos"].forEach(p =>
-    document.getElementById(p).classList.add("hidden")
-  );
-  document.getElementById(page).classList.remove("hidden");
-  if (page === "gallery") renderVideos(allVideos.filter(v => v.channel !== "YouTube User"), "video-list");
-  if (page === "dashboard") renderVideos(allVideos.filter(v => v.user === user), "dashboard-list");
-  if (page === "ytvideos") renderVideos(allVideos.filter(v => v.channel === "YouTube User"), "ytvideo-list", true);
-}
-
-function loginUser() {
-  const uname = document.getElementById("username").value;
-  const pass = document.getElementById("password").value;
-  if (uname && pass) {
-    user = uname;
-    localStorage.setItem("loggedIn", user);
-    fetchVideos().then(() => showPage("gallery"));
-  } else {
-    alert("Please enter valid credentials");
-  }
-}
-
-async function uploadVideo() {
-  const chName = document.getElementById("channelName").value;
-  const title = document.getElementById("videoTitle").value;
-  const chImg = document.getElementById("channelImage").files[0];
-  const vidFile = document.getElementById("videoFile").files[0];
-  if (!chName || !title || !chImg || !vidFile || !user) return alert("Fill all fields");
-
-  const imgUrl = await uploadToCloudinary(chImg, "image");
-  const vidUrl = await uploadToCloudinary(vidFile, "video");
-
-  const newVideo = {
-    channel: chName,
-    title,
-    img: imgUrl,
-    video: vidUrl,
-    user
-  };
-
-  allVideos.push(newVideo);
-  await saveToJsonBin();
-  alert("Uploaded successfully");
-  showPage("gallery");
-}
-
-async function uploadToCloudinary(file, type) {
-  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${type}/upload`;
-  const form = new FormData();
-  form.append("file", file);
-  form.append("upload_preset", UPLOAD_PRESET);
-
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", url);
-    xhr.upload.onprogress = e => {
-      const percent = Math.round((e.loaded * 100) / e.total);
-      document.getElementById("progressFill").style.width = percent + "%";
-      document.getElementById("progressFill").innerText = percent + "%";
-    };
-    xhr.onload = () => resolve(JSON.parse(xhr.responseText).secure_url);
-    xhr.onerror = () => reject("Upload failed");
-    xhr.send(form);
-  });
-}
-
-async function saveToJsonBin() {
-  await fetch(JSONBIN_URL, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Master-Key": JSONBIN_KEY
-    },
-    body: JSON.stringify(allVideos)
-  });
-}
-
-async function fetchVideos() {
-  const res = await fetch(JSONBIN_URL, {
-    headers: { "X-Master-Key": JSONBIN_KEY }
-  });
-  const data = await res.json();
-  allVideos = data.record || [];
-}
-
-function renderVideos(videos, containerId, isYouTube = false) {
-  document.getElementById(containerId).innerHTML = videos.map((v, i) => {
-    const vidElem = v.video.includes("youtube")
-      ? `<iframe class="youtube-frame" src="${v.video}" allowfullscreen onload="startEarningYT(this, ${i})"></iframe>`
-      : `<video src="${v.video}" controls width="100%" onplay="startEarning(this, ${i})"></video>`;
-
-    return `
-      <div class="video-card">
-        <div class="channel-info">
-          <img src="${v.img}" class="channel-img" />
-          <b>${v.channel}</b> <span class="tag-price">${isYouTube ? "+₹0.35/30s" : "+₹5/30s"}</span>
-        </div>
-        <h4>${v.title}</h4>
-        ${vidElem}
-        <div class="video-controls">
-          <button class="like" onclick="increment(this)">Like (<span>0</span>)</button>
-          <button class="dislike" onclick="increment(this)">Dislike (<span>0</span>)</button>
-          <button class="share" onclick="shareVideo('${v.video}')">Share</button>
-          <button class="connect" onclick="connectClick(this)">Connect (<span>0</span>)</button>
-        </div>
-        <div class="earn-timer" id="earn-${i}">Earnings: ₹0</div>
-      </div>
-    `;
-  }).join("");
-}
-
-function increment(btn) {
-  let span = btn.querySelector("span");
-  span.innerText = parseInt(span.innerText) + 1;
-}
-
-function shareVideo(url) {
-  navigator.clipboard.writeText(url);
-  alert("Link copied!");
-}
-
-function connectClick(btn) {
-  if (btn.classList.contains("connected")) return;
-  btn.classList.add("connected");
-  document.getElementById("connectSound").play();
-  let span = btn.querySelector("span");
-  span.innerText = parseInt(span.innerText) + 1;
-}
-
-function startEarning(video, index) {
-  if (video.dataset.earningStarted) return;
-  video.dataset.earningStarted = true;
-  let sec = 0;
-  setInterval(() => {
-    if (video.paused || video.ended) return;
-    sec++;
-    if (sec % 30 === 0) {
-      coins++;
-      earnings += 5;
-      document.getElementById("coinCounter").innerText = `Coins: ${coins}`;
-      document.getElementById("earningCounter").innerText = `Earning: ₹${earnings}`;
+    function showPage(id) {
+      document.querySelectorAll('.container > div').forEach(d => d.classList.add('hidden'));
+      const pg = document.getElementById(id);
+      if (pg) pg.classList.remove('hidden');
+      if (id === 'dashboard') renderDashboard();
     }
-    document.getElementById(`earn-${index}`).innerText = `Earnings: ₹${(sec * 5 / 30).toFixed(2)}`;
-  }, 1000);
-}
 
-function startEarningYT(iframe, index) {
-  if (iframe.dataset.earningStarted) return;
-  iframe.dataset.earningStarted = true;
-  let sec = 0;
-  setInterval(() => {
-    sec++;
-    if (sec % 30 === 0) {
-      coins++;
-      earnings += 0.35;
-      document.getElementById("coinCounter").innerText = `Coins: ${coins}`;
+    function renderDashboard() {
+      const dash = document.getElementById("dashboard-list");
+      dash.innerHTML = allYT.map((v, i) => `
+        <div class="video-card">
+          <div class="channel-info"><img src="${v.img}" class="channel-img"/><b>${v.channel}</b></div>
+          <h4>${v.title}</h4>
+          <iframe class="youtube-frame" src="${v.video}" allowfullscreen onload="setupYT(this, ${i}, true)"></iframe>
+          <div class="video-controls">
+            <button class="like" onclick="increment(this)">Like (<span>0</span>)</button>
+            <button class="dislike" onclick="increment(this)">Dislike (<span>0</span>)</button>
+            <button class="share" onclick="shareVideo('${v.video}')">Share</button>
+            <button class="connect" onclick="connectClick(this)">Connect (<span>0</span>)</button>
+          </div>
+          <div class="earn-timer" id="earn-dash-${i}">Earnings: ₹0.00</div>
+        </div>`).join('');
+    }
+
+    function searchYouTube() {
+      const q = document.getElementById('searchQuery').value.trim();
+      if (!q) return alert('Type something to search!');
+      const key = 'AIzaSyBQ8YHCLlRkj3lptljMnpWdSdnO2h0c93M';
+      fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(q)}&key=${key}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('exploreResults').innerHTML = data.items.map((item, i) => {
+            const vid = item.id.videoId;
+            const ch = item.snippet.channelTitle;
+            const img = item.snippet.thumbnails.default.url;
+            const title = item.snippet.title;
+            return `<div class="video-card">
+              <div class="channel-info"><img src="${img}" class="channel-img"/><b>${ch}</b></div>
+              <h4>${title}</h4>
+              <iframe class="youtube-frame" src="https://www.youtube.com/embed/${vid}" allowfullscreen></iframe>
+              <button onclick="addToIndiTube('${title.replace(/'/g,"\\'")}', 'https://www.youtube.com/embed/${vid}', '${ch.replace(/'/g,"\\'")}', '${img}')">Add to IndiTube</button>
+            </div>`;
+          }).join('');
+        });
+    }
+
+    function addToIndiTube(title, url, channel, img) {
+      const newVid = { title, video: url, channel, img, user };
+      allYT.push(newVid);
+      earnings += 3.5;
       document.getElementById("earningCounter").innerText = `Earning: ₹${earnings.toFixed(2)}`;
+      alert("Added to IndiTube Picks with ₹3.5 bonus!");
+      shuffleAndRenderYT();
+      showPage('ytvideos');
     }
-    document.getElementById(`earn-${index}`).innerText = `Earnings: ₹${(sec * 0.35 / 30).toFixed(2)}`;
-  }, 1000);
-}
 
-async function searchYouTube() {
-  const query = document.getElementById("searchQuery").value;
-  const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}`);
-  const data = await res.json();
-  const results = data.items.map(item => {
-    const vid = item.id.videoId;
-    const title = item.snippet.title;
-    return `
-      <div class="video-card">
-        <h4>${title}</h4>
-        <iframe class="youtube-frame" src="https://www.youtube.com/embed/${vid}" allowfullscreen></iframe>
-        <button onclick="addYouTubeVideo('${title}', 'https://www.youtube.com/embed/${vid}')">Add to IndiTube</button>
-      </div>
-    `;
-  }).join("");
-  document.getElementById("exploreResults").innerHTML = results;
-}
+    function shuffleAndRenderYT() {
+      const shuffled = allYT.sort(() => 0.5 - Math.random());
+      document.getElementById('ytvideo-list').innerHTML = shuffled.map((v, i) => `
+        <div class="video-card">
+          <div class="channel-info"><img src="${v.img}" class="channel-img"/><b>${v.channel}</b></div>
+          <h4>${v.title}</h4>
+          <iframe class="youtube-frame" src="${v.video}" allowfullscreen onload="setupYT(this, ${i})"></iframe>
+          <div class="video-controls">
+            <button class="like" onclick="increment(this)">Like (<span>0</span>)</button>
+            <button class="dislike" onclick="increment(this)">Dislike (<span>0</span>)</button>
+            <button class="share" onclick="shareVideo('${v.video}')">Share</button>
+            <button class="connect" onclick="connectClick(this)">Connect (<span>0</span>)</button>
+          </div>
+          <div class="earn-timer" id="earn-${i}">Earnings: ₹0.00</div>
+        </div>`).join('');
+    }
 
-function addYouTubeVideo(title, url) {
-  const newVideo = {
-    title,
-    video: url,
-    img: "https://upload.wikimedia.org/wikipedia/en/9/9f/Flag_of_India.svg",
-    channel: "YouTube User",
-    user: user
-  };
-  allVideos.push(newVideo);
-  earnings += 3.5;
-  document.getElementById("earningCounter").innerText = `Earning: ₹${earnings.toFixed(2)}`;
-  saveToJsonBin().then(() => {
-    alert("Added to IndiTube with ₹3.5 bonus!");
-    fetchVideos().then(() => showPage("ytvideos"));
-  });
-}
+    function setupYT(iframe, index, isDashboard = false) {
+      if (iframe.dataset.trackingStarted) return;
+      iframe.dataset.trackingStarted = true;
+      let sec = 0;
+      setInterval(() => {
+        sec++;
+        if (sec % 30 === 0) {
+          coins++;
+          earnings += 0.35;
+          document.getElementById("coinCounter").innerText = `Coins: ${coins}`;
+          document.getElementById("earningCounter").innerText = `Earning: ₹${earnings.toFixed(2)}`;
+        }
+        const earnID = isDashboard ? `earn-dash-${index}` : `earn-${index}`;
+        const earnElem = document.getElementById(earnID);
+        if (earnElem) earnElem.innerText = `Earnings: ₹${(sec * 0.35 / 30).toFixed(2)}`;
+      }, 1000);
+    }
 
-window.onload = () => {
-  const storedUser = localStorage.getItem("loggedIn");
-  if (storedUser) {
-    user = storedUser;
-    fetchVideos().then(() => showPage("gallery"));
-  } else {
-    showPage("login");
-  }
-};
-</script>
+    function increment(btn) {
+      const span = btn.querySelector('span');
+      span.innerText = parseInt(span.innerText) + 1;
+    }
+
+    function shareVideo(url) {
+      navigator.clipboard.writeText(url);
+      alert("Video link copied!");
+    }
+
+    function connectClick(btn) {
+      if (btn.classList.contains("connected")) return;
+      btn.classList.add("connected");
+      document.getElementById("connectSound").play();
+      const span = btn.querySelector("span");
+      span.innerText = parseInt(span.innerText) + 1;
+    }
+
+    window.onload = () => {
+      showPage('ytvideos');
+      shuffleAndRenderYT();
+    }
+  </script>
 </body>
 </html>
