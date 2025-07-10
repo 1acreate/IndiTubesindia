@@ -94,10 +94,14 @@
     function searchYouTube() {
       const q = document.getElementById('searchQuery').value.trim();
       if (!q) return alert('Type something to search!');
-      const key = 'AIzaSyBQ8YHCLlRkj3lptljMnpWdSdnO2h0c93M';
+      const key = 'AIzaSyC8deh4aDWekkvuegD5g6mNhFUrbRNVUTU';
       fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(q)}&key=${key}`)
         .then(res => res.json())
         .then(data => {
+          if (data.error) {
+            alert("API Error: " + data.error.message);
+            return;
+          }
           document.getElementById('exploreResults').innerHTML = data.items.map((item, i) => {
             const vid = item.id.videoId;
             const ch = item.snippet.channelTitle;
@@ -110,6 +114,9 @@
               <button onclick="addToIndiTube('${title.replace(/'/g,"\\'")}', 'https://www.youtube.com/embed/${vid}', '${ch.replace(/'/g,"\\'")}', '${img}')">Add to IndiTube</button>
             </div>`;
           }).join('');
+        })
+        .catch(err => {
+          alert("Network Error: " + err.message);
         });
     }
 
@@ -183,3 +190,4 @@
   </script>
 </body>
 </html>
+
